@@ -8,9 +8,11 @@ import com.personelproject.S.D.model.User;
 
 
 
+
 public interface UserRepository extends MongoRepository<User, String> {
     
     Optional<User> findByEmail(String email);
+    Optional<User> findByCin(Integer cin);
 
     Optional<User> findById(String id);
 

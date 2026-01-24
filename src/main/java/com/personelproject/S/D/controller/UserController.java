@@ -1,5 +1,7 @@
 package com.personelproject.S.D.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,25 +17,39 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
-@RequestMapping("api/users")
+@RequestMapping("api")
 
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    @GetMapping("/id/{id}")
+    @GetMapping("users/id/{id}")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    @PostMapping("/auth/register")
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+    
+        User existingUser = userService.findUserByEmailAndCin(user.getEmail(), user.getCin());
+    
+        if (existingUser != null) {
+    
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Un utilisateur avec cet email ou ce CIN existe déjà !"));
+        }
+    
+        
         User savedUser = userService.saveUser(user);
+    
         return ResponseEntity.ok(savedUser);
     }
+    
 
-    @PutMapping("/update/{id}")
+
+    @PutMapping("users/update/{id}")
     public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
         User updatedUser = userService.updateUser(id, user);
         return ResponseEntity.ok(updatedUser);

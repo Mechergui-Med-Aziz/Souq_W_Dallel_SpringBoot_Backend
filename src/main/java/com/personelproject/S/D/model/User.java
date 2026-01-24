@@ -20,7 +20,7 @@ public class User {
     private String firstname;
     private String lastname;
 
-    private int cin;
+    private Integer cin;
 
     private String email;
     private String password;

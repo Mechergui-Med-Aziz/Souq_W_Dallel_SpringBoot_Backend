@@ -1,6 +1,7 @@
 package com.personelproject.S.D.service;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,8 +26,28 @@ public class UserService implements UserDetailsService{
     }
 
     public User findUserByEmail(String email) {
-        return  userRepository.findByEmail(email).orElse(null);
+        Optional<User> userByEmail = userRepository.findByEmail(email);
+        if (userByEmail.isPresent()) {
+            return userByEmail.get();
+        }
+        return null;
     }
+
+    public User findUserByEmailAndCin(String email, Integer cin) {
+        Optional<User> userByEmail = userRepository.findByEmail(email);
+        if (userByEmail.isPresent()) {
+            return userByEmail.get();
+        }
+    
+        Optional<User> userByCin = userRepository.findByCin(cin);
+        if (userByCin.isPresent()) {
+            return userByCin.get();
+        }
+    
+        return null; 
+    }
+    
+    
 
     public User saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
