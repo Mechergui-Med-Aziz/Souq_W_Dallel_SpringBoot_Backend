@@ -66,7 +66,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOriginPatterns(List.of("http://localhost:8082")); // ///////////////////////////////
+        config.setAllowedOriginPatterns(List.of("http://localhost:8081",
+        "http://10.0.2.2:8081", // Android emulator
+        "http://172.16.13.98:8081", // Local network
+        "http://127.0.0.1:8081",
+        "http://172.16.13.98:8081"
+    )); // ///////////////////////////////
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
