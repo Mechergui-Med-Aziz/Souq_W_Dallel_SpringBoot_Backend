@@ -15,6 +15,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.personelproject.S.D.model.User;
+import com.personelproject.S.D.service.EmailService;
 import com.personelproject.S.D.service.UserService;
 
 import java.io.IOException;
@@ -27,11 +28,14 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserService userService ;
+    
+    private final EmailService emailService;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserService userService) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserService userService, EmailService emailService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userService = userService;
+        this.emailService = emailService;
         setFilterProcessesUrl("/api/auth/login");
     }
 
@@ -53,24 +57,43 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     
 
     @Override
-protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
-                                         FilterChain chain, Authentication authResult) 
-                                         throws IOException, ServletException {
-
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
+                                            FilterChain chain, Authentication authResult) 
+                                            throws IOException, ServletException {
     
-    User user = userService.findUserByEmail(authResult.getName());
+        User user = userService.findUserByEmail(authResult.getName());
     
-    String token = jwtUtils.generateToken(authResult.getName());
-
-    Map<String, String> responseMap = new HashMap<>();
-    responseMap.put("token", token);
-    responseMap.put("email", user.getEmail());
-    responseMap.put("id", String.valueOf(user.getId()));
-    response.setContentType("application/json");
-    response.setStatus(HttpStatus.OK.value());
-    new ObjectMapper().writeValue(response.getOutputStream(), responseMap);
-}
-
+        // Vérification du statut "Blocked"
+        if ("Blocked".equalsIgnoreCase(user.getStatus())) {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType("application/json");
+    
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("error", "Votre compte est bloqué ! Veuillez contacter l'administrateur.");
+            new ObjectMapper().writeValue(response.getOutputStream(), responseMap);
+            return; // arrêter ici la méthode
+        }
+    
+        // Si le statut est "Waiting for validation"
+        Map<String, String> responseMap = new HashMap<>();
+        if ("Waiting for validation".equalsIgnoreCase(user.getStatus())) {
+            responseMap.put("role", user.getRole());
+            responseMap.put("status", user.getStatus());
+            String code=emailService.sendConfirmationCode(user.getEmail());
+            responseMap.put("code",code);
+        }
+    
+        // Génération du token JWT
+        String token = jwtUtils.generateToken(authResult.getName());
+        responseMap.put("token", token);
+        responseMap.put("email", user.getEmail());
+        responseMap.put("id", String.valueOf(user.getId()));
+    
+        response.setContentType("application/json");
+        response.setStatus(HttpStatus.OK.value());
+        new ObjectMapper().writeValue(response.getOutputStream(), responseMap);
+    }
+    
 
 @Override
 protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,

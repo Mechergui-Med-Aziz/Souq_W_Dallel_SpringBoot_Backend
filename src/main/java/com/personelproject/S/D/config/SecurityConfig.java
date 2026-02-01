@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.personelproject.S.D.security.JwtAuthenticationFilter;
 import com.personelproject.S.D.security.JwtAuthorizationFilter;
 import com.personelproject.S.D.security.JwtUtils;
+import com.personelproject.S.D.service.EmailService;
 import com.personelproject.S.D.service.UserService;
 
 @Configuration
@@ -28,10 +29,12 @@ public class SecurityConfig {
     
     private final UserService userService;
     private final JwtUtils jwtUtils;
+    private final EmailService emailService;
 
-    public SecurityConfig(UserService userService, JwtUtils jwtUtils) {
+    public SecurityConfig(UserService userService, JwtUtils jwtUtils,EmailService emailService) {
         this.userService = userService;
         this.jwtUtils = jwtUtils;
+        this.emailService=emailService;
     }
 
     @Bean
@@ -55,7 +58,7 @@ public class SecurityConfig {
             .authenticationManager(authenticationManager);
     
         // Ajout des filtres de sécurité
-        http.addFilter(new JwtAuthenticationFilter(authenticationManager, jwtUtils, userService));
+        http.addFilter(new JwtAuthenticationFilter(authenticationManager, jwtUtils, userService,emailService));
         http.addFilterBefore(new JwtAuthorizationFilter(authenticationManager, jwtUtils), UsernamePasswordAuthenticationFilter.class);
     
         return http.build();
@@ -68,9 +71,8 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setAllowedOriginPatterns(List.of("http://localhost:8081",
         "http://10.0.2.2:8081", // Android emulator
-        "http://172.16.13.98:8081", // Local network
-        "http://127.0.0.1:8081",
-        "http://172.16.13.98:8081"
+        "http://172.16.16.193:8081", // Local network
+        "http://127.0.0.1:8081"
     )); // ///////////////////////////////
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
