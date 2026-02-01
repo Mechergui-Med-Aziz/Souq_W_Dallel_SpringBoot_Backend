@@ -72,6 +72,7 @@ public class UserService implements UserDetailsService{
         existingUser.setLastname(updatedUser.getLastname());
         existingUser.setCin(updatedUser.getCin());
         existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setStatus(updatedUser.getStatus());
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
