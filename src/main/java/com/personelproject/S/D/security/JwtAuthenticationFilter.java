@@ -77,8 +77,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         // Si le statut est "Waiting for validation"
         Map<String, String> responseMap = new HashMap<>();
         if ("Waiting for validation".equalsIgnoreCase(user.getStatus())) {
-            responseMap.put("role", user.getRole());
-            responseMap.put("status", user.getStatus());
+           
             String code=emailService.sendConfirmationCode(user.getEmail());
             responseMap.put("code",code);
         }
@@ -87,6 +86,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String token = jwtUtils.generateToken(authResult.getName());
         responseMap.put("token", token);
         responseMap.put("email", user.getEmail());
+        responseMap.put("role", user.getRole());
+        responseMap.put("status", user.getStatus());
         responseMap.put("id", String.valueOf(user.getId()));
     
         response.setContentType("application/json");
