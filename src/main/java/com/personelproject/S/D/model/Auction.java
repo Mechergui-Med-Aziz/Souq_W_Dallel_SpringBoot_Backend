@@ -1,7 +1,8 @@
 package com.personelproject.S.D.model;
-
-
 import lombok.*;
+
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -10,27 +11,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
-public class User {
+public class Auction {
     
-
     @Id
     private String id;
 
-    private String firstname;
-    private String lastname;
+    private String title;
+    private String description;
 
-    private Integer cin;
+    private Double startingPrice;
 
-    private String email;
-    private String password;
-
-    private String role;
     private String status;
 
-    private String photoId;
-
-}
-
+    private List<String> photoId;
+    private List<User> bidders;
+    private User seller;
     
-
+}

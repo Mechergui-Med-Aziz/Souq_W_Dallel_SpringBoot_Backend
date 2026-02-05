@@ -28,7 +28,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserService userService ;
-    
     private final EmailService emailService;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserService userService, EmailService emailService) {
@@ -81,10 +80,14 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             String code=emailService.sendConfirmationCode(user.getEmail());
             responseMap.put("code",code);
         }
+        if(!"Waiting for validation".equalsIgnoreCase(user.getStatus())) {
+            String token = jwtUtils.generateToken(authResult.getName());
+            responseMap.put("token", token);
+        }
     
         // Génération du token JWT
-        String token = jwtUtils.generateToken(authResult.getName());
-        responseMap.put("token", token);
+        
+        
         responseMap.put("email", user.getEmail());
         responseMap.put("role", user.getRole());
         responseMap.put("status", user.getStatus());

@@ -25,6 +25,12 @@ public class UserService implements UserDetailsService{
         this.passwordEncoder = passwordEncoder;
     }
 
+    public User updateUserPhoto(String userId, String photoId) {
+        User user = findUserById(userId);
+        user.setPhotoId(photoId);
+        return userRepository.save(user);
+    }
+    
     public User findUserByEmail(String email) {
         Optional<User> userByEmail = userRepository.findByEmail(email);
         if (userByEmail.isPresent()) {
@@ -87,6 +93,12 @@ public class UserService implements UserDetailsService{
         User user=findUserByEmail(email);
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
     }
+    public User removeUserPhoto(String userId) {
+        User user = findUserById(userId);
+        user.setPhotoId(null);
+        return userRepository.save(user);
+    }
+    
     }
     
 
