@@ -21,6 +21,9 @@ import com.personelproject.S.D.model.Auction;
 import com.personelproject.S.D.service.AuctionService;
 import com.personelproject.S.D.service.PhotoService;
 
+import tools.jackson.databind.ObjectMapper;
+
+
 
 @RestController
 @RequestMapping("api/auctions")
@@ -32,9 +35,10 @@ public class AuctionController {
 
 
     @PostMapping(value = "/create",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createAuction(@RequestPart("auction") Auction auction,@RequestPart("files") List<MultipartFile> files) throws Exception {
+    public ResponseEntity<?> createAuction(@RequestPart("auction") String auctionjson,@RequestPart("files") List<MultipartFile> files) throws Exception {
 
-        // 📸 upload photos
+            ObjectMapper mapper = new ObjectMapper();
+            Auction auction = mapper.readValue(auctionjson, Auction.class);
         List<String> photoIds = new ArrayList<>();
         for (MultipartFile file : files) {
             photoIds.add(photoService.uploadPhoto(file));
@@ -64,4 +68,10 @@ public class AuctionController {
         auctionService.deleteAuction(id);
         return ResponseEntity.noContent().build();
      }
+
+     @GetMapping("/all")
+     public List<Auction> getAllAuctions() {
+         return auctionService.findAllAuctions();
+     }
+     
 }

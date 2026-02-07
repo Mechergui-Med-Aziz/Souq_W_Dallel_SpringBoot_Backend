@@ -1,5 +1,7 @@
 package com.personelproject.S.D.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,9 @@ public class AuctionService {
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Auction not found with id: " + id
             ));
+    }
+    public List<Auction> findAllAuctions() {
+        return auctionRepository.findAll();
     }
     
     public void deleteAuction(String id) {

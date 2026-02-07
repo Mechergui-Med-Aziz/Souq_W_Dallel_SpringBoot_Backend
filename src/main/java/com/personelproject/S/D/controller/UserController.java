@@ -20,6 +20,8 @@ import com.personelproject.S.D.service.EmailService;
 import com.personelproject.S.D.service.PhotoService;
 import com.personelproject.S.D.service.UserService;
 
+import tools.jackson.databind.ObjectMapper;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,20 +51,28 @@ public class UserController {
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
-    @PostMapping(value = "/auth/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createUser(@RequestPart("user") User user,@RequestPart("file") MultipartFile file) throws Exception {
+   @PostMapping(value = "/auth/register",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createUser(@RequestPart("user") String userJson,@RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
 
-        User existingUser = userService.findUserByEmailAndCin(user.getEmail(), user.getCin());
+        ObjectMapper mapper = new ObjectMapper();
+        User user = mapper.readValue(userJson, User.class);
+
+        User existingUser = userService.findUserByEmailAndCin(
+                user.getEmail(),
+                user.getCin()
+        );
 
         if (existingUser != null) {
             return ResponseEntity
                     .badRequest()
-                    .body(Map.of("message", "Un utilisateur avec cet email ou ce CIN existe déjà !"));
+                    .body(Map.of("message",
+                            "Un utilisateur avec cet email ou ce CIN existe déjà !"));
         }
 
-        // 📤 upload photo
-        String photoId = photoService.uploadPhoto(file);
-        user.setPhotoId(photoId);
+        if (file != null && !file.isEmpty()) {
+            String photoId = photoService.uploadPhoto(file);
+            user.setPhotoId(photoId);
+        }
 
         user.setRole("User");
         user.setStatus("Waiting for validation");
@@ -70,27 +80,11 @@ public class UserController {
         User savedUser = userService.saveUser(user);
         String code = emailService.sendConfirmationCode(savedUser.getEmail());
 
-        return ResponseEntity.ok(Map.of("user", savedUser,"code", code));
+        return ResponseEntity.ok(
+                Map.of("user", savedUser, "code", code)
+        );
     }
 
-
-    @PostMapping("/auth/confirmation/{email}")
-    public ResponseEntity<?> validateAccount(@PathVariable String email) {
-        User user = userService.findUserByEmail(email);
-        if (user == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("message", "Utilisateur non trouvé !"));
-        }
-        user.setRole("User");
-        user.setStatus("Activated");
-        user.setPassword("");
-        User updatedUser = userService.updateUser(user.getId(), user);
-        if( updatedUser!= null)
-            emailService.sendActivationAccountEmail(email);
-        
-        return ResponseEntity.ok(updatedUser);
-    }
 
     @PostMapping("/auth/confirmation/{email}/resend")
     public ResponseEntity<?> resendConfirmationCode(@PathVariable String email) {
@@ -130,8 +124,11 @@ public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody UserResetP
 
 
     @PutMapping(value = "users/update/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestPart("user") User user,@RequestPart(value = "file", required = false) MultipartFile file)throws Exception {
+    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestPart("user") String userJson,@RequestPart(value = "file", required = false) MultipartFile file)throws Exception {
 
+        ObjectMapper mapper = new ObjectMapper();
+        User user = mapper.readValue(userJson, User.class);
+        
         User existingUser = userService.findUserById(id);
 
         // 🖼️ Si une nouvelle photo est envoyée

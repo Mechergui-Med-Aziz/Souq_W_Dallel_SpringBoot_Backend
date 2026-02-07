@@ -2,11 +2,12 @@ package com.personelproject.S.D.model;
 import lombok.*;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "users")
+@Document(collection = "Auctions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,11 +21,12 @@ public class Auction {
     private String description;
 
     private Double startingPrice;
+    private String Category;
 
     private String status;
 
     private List<String> photoId;
-    private List<User> bidders;
+    private Map<String,Double> bidders;
     private User seller;
     
 }
