@@ -97,6 +97,19 @@ public class UserController {
         String code =emailService.sendConfirmationCode(email);
         return ResponseEntity.ok(Map.of("code",code));
     }
+    @PostMapping("/auth/validate/{email}")
+    public ResponseEntity<?> ValidateAccount(@PathVariable String email) {
+        User user = userService.findUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Utilisateur non trouvé !"));
+        }
+        user.setStatus("Activated");
+        userService.updateUser(user.getId(), user);
+        return ResponseEntity.ok(Map.of("message","Compte activé avec succès !"));
+    }
+    
 
     @PostMapping("/reset-password")
 public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody UserResetPasswordRequest request) {

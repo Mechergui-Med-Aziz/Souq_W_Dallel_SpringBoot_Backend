@@ -25,6 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 
 
 
+
 @RestController
 @RequestMapping("api/auctions")
 public class AuctionController {
@@ -73,5 +74,12 @@ public class AuctionController {
      public List<Auction> getAllAuctions() {
          return auctionService.findAllAuctions();
      }
+
+     @GetMapping("/seller/{sellerId}")
+     public ResponseEntity<?> getAuctionsBySellerId(@PathVariable String id) {
+            List<Auction> auctions = auctionService.findAuctionsBySellerId(id);
+            return ResponseEntity.ok(auctions);
+     }
+     
      
 }
