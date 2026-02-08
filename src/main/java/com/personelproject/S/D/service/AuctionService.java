@@ -49,6 +49,11 @@ public class AuctionService {
         return auctionRepository.save(auction);
     }
     
+    public List<Auction> findAuctionsBySellerId(String sellerId) {
+        return auctionRepository.findBySellerId(sellerId);
+    }
+
+    
 
     
 }
