@@ -15,9 +15,6 @@ public interface AuctionRepository extends  MongoRepository<Auction, String> {
     Optional<Auction> findById(String id);
     List<Auction> findBySellerId(String sellerId);
     List<Auction> findByCategory(String category);
-    List<Auction> findAll();
-
-    List<Auction> findBySeller(String id);
-        
+    List<Auction> findAll();        
    
 }
