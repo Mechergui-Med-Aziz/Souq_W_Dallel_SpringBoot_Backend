@@ -27,6 +27,6 @@ public class Auction {
 
     private List<String> photoId;
     private Map<String,Double> bidders;
-    private User seller;
+    private String sellerId;
     
 }
