@@ -3,8 +3,10 @@ package com.personelproject.S.D.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.personelproject.S.D.model.Auction;
 import com.personelproject.S.D.service.AuctionService;
 import com.personelproject.S.D.service.PhotoService;
@@ -80,6 +83,33 @@ public class AuctionController {
             List<Auction> auctions = auctionService.findAuctionsBySellerId(id);
             return ResponseEntity.ok(auctions);
      }
+
+     @GetMapping("/{id}/photos")
+    public ResponseEntity<?> getAuctionPhoto(@PathVariable String id,@RequestBody String photoId) throws Exception {
+
+        Auction auction = auctionService.findAuctionById(id);
+
+        if (auction.getPhotoId() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        GridFSFile file = photoService.getPhoto(photoId);
+
+        if (file == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(
+                        file.getMetadata().getString("_contentType")))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + file.getFilename() + "\"")
+                .body((org.springframework.core.io.Resource)
+                        new InputStreamResource(
+                                photoService.getResource(file).getInputStream()
+                        ));
+    }
+
      
      
 }
