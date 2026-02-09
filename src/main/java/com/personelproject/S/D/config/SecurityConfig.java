@@ -71,7 +71,7 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setAllowedOriginPatterns(List.of("http://localhost:8081",
         "http://10.0.2.2:8081", // Android emulator
-        "http://172.16.16.30:8081", // Local network
+        "http://10.13.248.23:8081", // Local network
         "http://127.0.0.1:8081"
     )); // ///////////////////////////////
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

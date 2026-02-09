@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "Auctions")
+@Document(collection = "auctions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class Auction {
     private String description;
 
     private Double startingPrice;
-    private String Category;
+    private String category;
 
     private String status;
 
