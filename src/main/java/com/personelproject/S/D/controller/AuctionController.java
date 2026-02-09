@@ -84,12 +84,12 @@ public class AuctionController {
             return ResponseEntity.ok(auctions);
      }
 
-     @GetMapping("/{id}/photos")
-    public ResponseEntity<?> getAuctionPhoto(@PathVariable String id,@RequestBody String photoId) throws Exception {
+     @GetMapping("/{id}/photos/{photoId}")
+    public ResponseEntity<?> getAuctionPhoto(@PathVariable String id,@PathVariable String photoId) throws Exception {
 
         Auction auction = auctionService.findAuctionById(id);
 
-        if (auction.getPhotoId() == null) {
+        if (auction== null) {
             return ResponseEntity.notFound().build();
         }
 
