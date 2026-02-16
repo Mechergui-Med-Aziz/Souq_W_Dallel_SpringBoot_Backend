@@ -16,8 +16,8 @@ private JavaMailSender emailSender;
 private UserService userService;
 
 
-public void sendPasswordResetEmail(String toEmail, User u) {
-    String newPassword = generateRandomPassword();
+public void sendPasswordResetcode(String toEmail, User u) {
+    String newCode = generateRandomCode();
     
     SimpleMailMessage message = new SimpleMailMessage();
     message.setFrom("souq.w.dallel@gmail.com");
@@ -27,8 +27,7 @@ public void sendPasswordResetEmail(String toEmail, User u) {
     message.setText(
         "Bonjour " + u.getFirstname() + ",\n\n" +
         "Nous avons bien reçu votre demande de réinitialisation de mot de passe.\n"+
-        "Voici votre nouveau mot de passe temporaire : " + newPassword + "\n\n" +
-        "Pour des raisons de sécurité, nous vous recommandons de le modifier dès votre prochaine connexion.\n\n" +
+        "Voici le code d'accés pour reinitialier votre mot de passe : " + newCode + "\n\n" +
         "Si vous n'êtes pas à l'origine de cette demande, veuillez contacter notre support technique immédiatement.\n\n" +
         "Cordialement,\n" +
         "L'équipe S&D Auction\n" +
@@ -36,10 +35,7 @@ public void sendPasswordResetEmail(String toEmail, User u) {
     );
     
     emailSender.send(message);
-    
-    u.setPassword(newPassword);
-    userService.updateUser(u.getId(), u);
-}
+    }
 
 public String sendConfirmationCode(String toEmail) {
     String code = generateRandomCode();
@@ -92,18 +88,6 @@ public void sendActivationAccountEmail(String toEmail) {
 
 
 
-private String generateRandomPassword() {
-    
-    int length = 8;
-    String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-*$#@!";
-    Random rand = new Random();
-    StringBuilder password = new StringBuilder();
-    for (int i = 0; i < length; i++) {
-        int randomIndex = rand.nextInt(chars.length());
-        password.append(chars.charAt(randomIndex));
-    }
-    return password.toString();
-}
 
 private String generateRandomCode() {
     
