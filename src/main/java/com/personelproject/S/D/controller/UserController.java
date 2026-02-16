@@ -1,10 +1,7 @@
 package com.personelproject.S.D.controller;
 
-// Removed redundant import
-import java.util.HashMap;
 import java.util.Map;
 
-// Removed redundant import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 
@@ -62,12 +60,12 @@ public class UserController {
                 user.getCin()
         );
 
-        if (existingUser != null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("message",
-                            "Un utilisateur avec cet email ou ce CIN existe déjà !"));
-        }
+            if (existingUser != null) {
+                return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .build();
+    }
+
 
         if (file != null && !file.isEmpty()) {
             String photoId = photoService.uploadPhoto(file);
@@ -92,7 +90,7 @@ public class UserController {
         if (user == null) {
             return ResponseEntity
                     .badRequest()
-                    .body(Map.of("message", "Utilisateur non trouvé !"));
+                    .build();
         }
         String code =emailService.sendConfirmationCode(email);
         return ResponseEntity.ok(Map.of("code",code));
@@ -102,36 +100,43 @@ public class UserController {
         User user = userService.findUserByEmail(email);
         if (user == null) {
             return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("message", "Utilisateur non trouvé !"));
+                    .badRequest().build();
         }
         user.setStatus("Activated");
         userService.updateUser(user.getId(), user);
-        return ResponseEntity.ok(Map.of("message","Compte activé avec succès !"));
+        return ResponseEntity.ok().build();
     }
     
 
-    @PostMapping("/reset-password")
-public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody UserResetPasswordRequest request) {
-    User user = userService.findUserByEmailAndCin( request.getEmail(),request.getCin());
+        @PostMapping("/reset-password")
+        public ResponseEntity<?> resetPassword(@RequestBody UserResetPasswordRequest request) {
+        User user = userService.findUserByEmailAndCin( request.getEmail(),request.getCin());
 
-    if (user != null) {
-        System.out.println(user);
-        emailService.sendPasswordResetEmail(request.getEmail(), user);
+        if (user != null) {
+            System.out.println(user);
+            emailService.sendPasswordResetcode(request.getEmail(), user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Un email de réinitialisation de mot de passe a été envoyé, Veuillez vérifier votre boîte de réception.");
+        return ResponseEntity.ok().build();
+        }
+
         
-        return ResponseEntity.ok(response);
+        return ResponseEntity.badRequest().build();
     }
 
-    Map<String, Object> errorResponse = new HashMap<>();
-    errorResponse.put("success", false);
-    errorResponse.put("message", "Aucun utilisateur trouvé avec ce cin et cet email.");
-    
-    return ResponseEntity.badRequest().body(errorResponse);
-}
+    @PutMapping("/users/update-password/{password}")
+    public ResponseEntity<?> updateUserPassword(@PathVariable String password, @RequestBody UserResetPasswordRequest user) {
+       
+        User userr = userService.findUserByEmailAndCin(user.getEmail(),user.getCin());
+
+        if (user != null) {
+            //System.out.println(user);
+            userService.updateUser(userr.getId(), userr);
+         return ResponseEntity.ok().build();
+        }
+
+        
+        return ResponseEntity.badRequest().build();
+    }
     
     
 
@@ -144,20 +149,20 @@ public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody UserResetP
         
         User existingUser = userService.findUserById(id);
 
-        // 🖼️ Si une nouvelle photo est envoyée
+        
         if (file != null && !file.isEmpty()) {
 
-            // supprimer l’ancienne photo
+            
             if (existingUser.getPhotoId() != null) {
                 photoService.deletePhoto(existingUser.getPhotoId());
             }
 
-            // upload nouvelle photo
+            
             String photoId = photoService.uploadPhoto(file);
             user.setPhotoId(photoId);
 
         } else {
-            // garder l’ancienne photo
+            
             user.setPhotoId(existingUser.getPhotoId());
         }
 
@@ -204,7 +209,7 @@ public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody UserResetP
             userService.removeUserPhoto(id);
         }
     
-        return ResponseEntity.ok(Map.of("message", "Photo supprimée"));
+        return ResponseEntity.ok().build();
     }
     
 

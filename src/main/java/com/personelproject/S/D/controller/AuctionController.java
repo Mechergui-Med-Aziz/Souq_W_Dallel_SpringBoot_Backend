@@ -79,8 +79,8 @@ public class AuctionController {
      }
 
      @GetMapping("/seller/{sellerId}")
-     public ResponseEntity<?> getAuctionsBySellerId(@PathVariable String id) {
-            List<Auction> auctions = auctionService.findAuctionsBySellerId(id);
+     public ResponseEntity<?> getAuctionsBySellerId(@PathVariable String sellerId) {
+            List<Auction> auctions = auctionService.findAuctionsBySellerId(sellerId);
             return ResponseEntity.ok(auctions);
      }
 
