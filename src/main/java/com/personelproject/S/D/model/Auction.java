@@ -1,6 +1,7 @@
 package com.personelproject.S.D.model;
-import lombok.*;
 
+import lombok.*;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Builder
 public class Auction {
-    
+
     @Id
     private String id;
 
@@ -26,7 +27,7 @@ public class Auction {
     private String status;
 
     private List<String> photoId;
-    private Map<String,Double> bidders;
+    private Map<String, Double> bidders;
     private String sellerId;
-    
+    private Date expireDate;
 }
