@@ -124,17 +124,17 @@ public class UserController {
     }
 
     @PutMapping("/users/update-password/{password}")
-    public ResponseEntity<?> updateUserPassword(@PathVariable String password, @RequestBody UserResetPasswordRequest user) {
-       
-        User userr = userService.findUserByEmailAndCin(user.getEmail(),user.getCin());
+    public ResponseEntity<?> updateUserPassword(@PathVariable String password,
+            @RequestBody UserResetPasswordRequest user) {
 
-        if (user != null) {
-            //System.out.println(user);
+        User userr = userService.findUserByEmailAndCin(user.getEmail(), user.getCin());
+
+        if (userr != null) {
+            userr.setPassword(password);
             userService.updateUser(userr.getId(), userr);
-         return ResponseEntity.ok().build();
+            return ResponseEntity.ok().build();
         }
 
-        
         return ResponseEntity.badRequest().build();
     }
     
