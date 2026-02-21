@@ -2,6 +2,7 @@ package com.personelproject.S.D.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,8 +22,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.personelproject.S.D.model.Auction;
+import com.personelproject.S.D.model.Notification;
 import com.personelproject.S.D.service.AuctionService;
+import com.personelproject.S.D.service.NotificationService;
 import com.personelproject.S.D.service.PhotoService;
+import com.personelproject.S.D.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -36,6 +40,10 @@ public class AuctionController {
     private AuctionService auctionService;
     @Autowired
     private PhotoService photoService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private NotificationService notificationService;
 
 
     @PostMapping(value = "/create",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -110,6 +118,29 @@ public class AuctionController {
                         ));
     }
 
-     
-     
-}
+        @PutMapping("bid/add/{idAuction}/{idBidder}/{bidAmount}")
+        public ResponseEntity<?> placeBid(@PathVariable String idAuction,@PathVariable String idBidder,@PathVariable Double bidAmount) {
+
+        if (userService.findUserById(idBidder) == null) {
+            return ResponseEntity.badRequest().body("Bidder not found with id: " + idBidder);
+        }
+
+        if (auctionService.findAuctionById(idAuction) == null) {
+            return ResponseEntity.badRequest().body("Auction not found with id: " + idAuction);
+        }
+
+        try {
+
+            Auction updatedAuction =auctionService.placeBid(idAuction, idBidder, bidAmount);
+
+            Notification notif=notificationService.save(updatedAuction.getSellerId(),updatedAuction.getId());
+
+            return ResponseEntity.ok(Map.of("auction",updatedAuction,"notification",notif));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+        
+        
+    }

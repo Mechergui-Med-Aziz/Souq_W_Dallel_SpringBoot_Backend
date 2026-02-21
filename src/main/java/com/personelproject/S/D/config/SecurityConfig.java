@@ -51,8 +51,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // toutes les requêtes sont autorisées sauf celles vers /cmpx/**
-                .requestMatchers("/api/payment/**").authenticated()
-                .anyRequest().permitAll()
+                .requestMatchers("/api/users/**","/api/auctions/**","/api/notifications/**").authenticated()
+                .requestMatchers("/api/home").permitAll()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT uniquement
             .authenticationManager(authenticationManager);
@@ -71,10 +71,8 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setAllowedOriginPatterns(List.of("http://localhost:8081",
         "http://10.0.2.2:8081", // Android emulator
-        "http://10.196.96.23:8081", // Local network
-        "http://192.168.138.23:8081",
-        "http://10.13.248.28:8081"
-        )); // ///////////////////////////////
+        "http://192.168.1.102:8081"// Local network
+        )); 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
