@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,9 +29,6 @@ import com.personelproject.S.D.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
 
-
-
-
 @RestController
 @RequestMapping("api/auctions")
 public class AuctionController {
@@ -45,12 +41,12 @@ public class AuctionController {
     @Autowired
     private NotificationService notificationService;
 
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createAuction(@RequestPart("auction") String auctionjson,
+            @RequestPart("files") List<MultipartFile> files) throws Exception {
 
-    @PostMapping(value = "/create",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createAuction(@RequestPart("auction") String auctionjson,@RequestPart("files") List<MultipartFile> files) throws Exception {
-
-            ObjectMapper mapper = new ObjectMapper();
-            Auction auction = mapper.readValue(auctionjson, Auction.class);
+        ObjectMapper mapper = new ObjectMapper();
+        Auction auction = mapper.readValue(auctionjson, Auction.class);
         List<String> photoIds = new ArrayList<>();
         for (MultipartFile file : files) {
             photoIds.add(photoService.uploadPhoto(file));
@@ -62,42 +58,93 @@ public class AuctionController {
         return ResponseEntity.ok(createdAuction);
     }
 
-
-     @GetMapping("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Auction> getAuctionById(@PathVariable String id) {
         Auction auction = auctionService.findAuctionById(id);
         return ResponseEntity.ok(auction);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Auction> updateAuction(@PathVariable String id, @RequestBody Auction auction) {
-        Auction updatedAuction = auctionService.updateAuction(auction);
-        return ResponseEntity.ok(updatedAuction);
-     }
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Auction> updateAuction(@PathVariable String id,
+            @RequestPart("auction") String auctionjson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestPart(value = "removedPhotoIds", required = false) String removedPhotoIdsJson) throws Exception {
 
-     @DeleteMapping("/delete/{id}")
+        ObjectMapper mapper = new ObjectMapper();
+        Auction incomingAuction = mapper.readValue(auctionjson, Auction.class);
+
+        Auction existingAuction = auctionService.findAuctionById(id);
+
+        // Only update fields that are allowed to change
+        existingAuction.setTitle(incomingAuction.getTitle());
+        existingAuction.setDescription(incomingAuction.getDescription());
+        existingAuction.setStartingPrice(incomingAuction.getStartingPrice());
+        existingAuction.setCategory(incomingAuction.getCategory());
+        existingAuction.setExpireDate(incomingAuction.getExpireDate());
+
+        List<String> removedPhotoIds = new ArrayList<>();
+        if (removedPhotoIdsJson != null && !removedPhotoIdsJson.isEmpty()) {
+            removedPhotoIds = mapper.readValue(removedPhotoIdsJson,
+                    mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+        }
+
+        // Delete removed photos
+        if (!removedPhotoIds.isEmpty()) {
+            for (String photoId : removedPhotoIds) {
+                try {
+                    photoService.deletePhoto(photoId);
+                } catch (Exception e) {
+                    System.out.println("Error deleting photo: " + e.getMessage());
+                }
+            }
+        }
+
+        // Keep existing photos that weren't removed
+        List<String> updatedPhotoIds = new ArrayList<>();
+        if (existingAuction.getPhotoId() != null) {
+            for (String photoId : existingAuction.getPhotoId()) {
+                if (!removedPhotoIds.contains(photoId)) {
+                    updatedPhotoIds.add(photoId);
+                }
+            }
+        }
+
+        // Upload new photos
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                updatedPhotoIds.add(photoService.uploadPhoto(file));
+            }
+        }
+
+        existingAuction.setPhotoId(updatedPhotoIds);
+
+        Auction updatedAuction = auctionService.updateAuction(existingAuction);
+        return ResponseEntity.ok(updatedAuction);
+    }
+
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteAuction(@PathVariable String id) {
         auctionService.deleteAuction(id);
         return ResponseEntity.noContent().build();
-     }
+    }
 
-     @GetMapping("/all")
-     public List<Auction> getAllAuctions() {
-         return auctionService.findAllAuctions();
-     }
+    @GetMapping("/all")
+    public List<Auction> getAllAuctions() {
+        return auctionService.findAllAuctions();
+    }
 
-     @GetMapping("/seller/{sellerId}")
-     public ResponseEntity<?> getAuctionsBySellerId(@PathVariable String sellerId) {
-            List<Auction> auctions = auctionService.findAuctionsBySellerId(sellerId);
-            return ResponseEntity.ok(auctions);
-     }
+    @GetMapping("/seller/{sellerId}")
+    public ResponseEntity<?> getAuctionsBySellerId(@PathVariable String sellerId) {
+        List<Auction> auctions = auctionService.findAuctionsBySellerId(sellerId);
+        return ResponseEntity.ok(auctions);
+    }
 
-     @GetMapping("/{id}/photos/{photoId}")
-    public ResponseEntity<?> getAuctionPhoto(@PathVariable String id,@PathVariable String photoId) throws Exception {
+    @GetMapping("/{id}/photos/{photoId}")
+    public ResponseEntity<?> getAuctionPhoto(@PathVariable String id, @PathVariable String photoId) throws Exception {
 
         Auction auction = auctionService.findAuctionById(id);
 
-        if (auction== null) {
+        if (auction == null) {
             return ResponseEntity.notFound().build();
         }
 
@@ -112,14 +159,13 @@ public class AuctionController {
                         file.getMetadata().getString("_contentType")))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + file.getFilename() + "\"")
-                .body((org.springframework.core.io.Resource)
-                        new InputStreamResource(
-                                photoService.getResource(file).getInputStream()
-                        ));
+                .body((org.springframework.core.io.Resource) new InputStreamResource(
+                        photoService.getResource(file).getInputStream()));
     }
 
-        @PutMapping("bid/add/{idAuction}/{idBidder}/{bidAmount}")
-        public ResponseEntity<?> placeBid(@PathVariable String idAuction,@PathVariable String idBidder,@PathVariable Double bidAmount) {
+    @PutMapping("bid/add/{idAuction}/{idBidder}/{bidAmount}")
+    public ResponseEntity<?> placeBid(@PathVariable String idAuction, @PathVariable String idBidder,
+            @PathVariable Double bidAmount) {
 
         if (userService.findUserById(idBidder) == null) {
             return ResponseEntity.badRequest().body("Bidder not found with id: " + idBidder);
@@ -131,16 +177,15 @@ public class AuctionController {
 
         try {
 
-            Auction updatedAuction =auctionService.placeBid(idAuction, idBidder, bidAmount);
+            Auction updatedAuction = auctionService.placeBid(idAuction, idBidder, bidAmount);
 
-            Notification notif=notificationService.save(updatedAuction.getSellerId(),updatedAuction.getId());
+            Notification notif = notificationService.save(updatedAuction.getSellerId(), updatedAuction.getId());
 
-            return ResponseEntity.ok(Map.of("auction",updatedAuction,"notification",notif));
+            return ResponseEntity.ok(Map.of("auction", updatedAuction, "notification", notif));
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-        
-        
-    }
+
+}
