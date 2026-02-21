@@ -123,7 +123,7 @@ public class UserController {
         return ResponseEntity.badRequest().build();
     }
 
-    @PutMapping("/users/update-password/{password}")
+    @PutMapping("/user/update-password/{password}")
     public ResponseEntity<?> updateUserPassword(@PathVariable String password,
             @RequestBody UserResetPasswordRequest user) {
 
