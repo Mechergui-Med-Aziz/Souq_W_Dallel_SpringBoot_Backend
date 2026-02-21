@@ -53,6 +53,18 @@ public class AuctionService {
         return auctionRepository.findBySellerId(sellerId);
     }
 
+    public Auction placeBid(String auctionId, String bidderId, Double bidAmount) {
+        Auction auction = findAuctionById(auctionId);
+        if (auction.getBidders() == null || !auction.getBidders().containsKey(bidderId) || bidAmount > auction.getBidders().get(bidderId)) {
+            auction.getBidders().put(bidderId, bidAmount);
+            return auctionRepository.save(auction);
+        } else {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Bid must be higher than current bid for bidder: " + bidderId
+            );
+        }
+    }
+
     
 
     
