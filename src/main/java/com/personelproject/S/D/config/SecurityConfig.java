@@ -52,7 +52,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // toutes les requêtes sont autorisées sauf celles vers /cmpx/**
                 .requestMatchers("/api/users/**","/api/auctions/**","/api/notifications/**").authenticated()
-                .requestMatchers("/api/home").permitAll()
+                .requestMatchers("/api/reset-password","/api/auth/**","/api/user/update-password/**").permitAll()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT uniquement
             .authenticationManager(authenticationManager);
