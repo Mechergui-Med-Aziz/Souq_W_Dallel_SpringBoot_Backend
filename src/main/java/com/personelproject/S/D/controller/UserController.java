@@ -1,5 +1,6 @@
 package com.personelproject.S.D.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-
-
 @RestController
 @RequestMapping("api")
 
@@ -43,29 +42,33 @@ public class UserController {
     @Autowired
     private PhotoService photoService;
 
+    @GetMapping("users/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userService.findAllUsers();
+        return ResponseEntity.ok(users);
+    }
 
     @GetMapping("users/id/{id}")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
-   @PostMapping(value = "/auth/register",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createUser(@RequestPart("user") String userJson,@RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+    @PostMapping(value = "/auth/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createUser(@RequestPart("user") String userJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
 
         ObjectMapper mapper = new ObjectMapper();
         User user = mapper.readValue(userJson, User.class);
 
         User existingUser = userService.findUserByEmailAndCin(
                 user.getEmail(),
-                user.getCin()
-        );
+                user.getCin());
 
-            if (existingUser != null) {
-                return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .build();
-    }
-
+        if (existingUser != null) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .build();
+        }
 
         if (file != null && !file.isEmpty()) {
             String photoId = photoService.uploadPhoto(file);
@@ -79,10 +82,8 @@ public class UserController {
         String code = emailService.sendConfirmationCode(savedUser.getEmail());
 
         return ResponseEntity.ok(
-                Map.of("user", savedUser, "code", code)
-        );
+                Map.of("user", savedUser, "code", code));
     }
-
 
     @PostMapping("/auth/confirmation/{email}/resend")
     public ResponseEntity<?> resendConfirmationCode(@PathVariable String email) {
@@ -92,9 +93,10 @@ public class UserController {
                     .badRequest()
                     .build();
         }
-        String code =emailService.sendConfirmationCode(email);
-        return ResponseEntity.ok(Map.of("code",code));
+        String code = emailService.sendConfirmationCode(email);
+        return ResponseEntity.ok(Map.of("code", code));
     }
+
     @PostMapping("/auth/validate/{email}")
     public ResponseEntity<?> ValidateAccount(@PathVariable String email) {
         User user = userService.findUserByEmail(email);
@@ -106,20 +108,18 @@ public class UserController {
         userService.updateUser(user.getId(), user);
         return ResponseEntity.ok().build();
     }
-    
 
-        @PostMapping("/reset-password")
-        public ResponseEntity<?> resetPassword(@RequestBody UserResetPasswordRequest request) {
-        User user = userService.findUserByEmailAndCin( request.getEmail(),request.getCin());
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody UserResetPasswordRequest request) {
+        User user = userService.findUserByEmailAndCin(request.getEmail(), request.getCin());
 
         if (user != null) {
             System.out.println(user);
             emailService.sendPasswordResetcode(request.getEmail(), user);
 
-        return ResponseEntity.ok().build();
+            return ResponseEntity.ok().build();
         }
 
-        
         return ResponseEntity.badRequest().build();
     }
 
@@ -137,32 +137,27 @@ public class UserController {
 
         return ResponseEntity.badRequest().build();
     }
-    
-    
 
-
-    @PutMapping(value = "users/update/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestPart("user") String userJson,@RequestPart(value = "file", required = false) MultipartFile file)throws Exception {
+    @PutMapping(value = "users/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestPart("user") String userJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
 
         ObjectMapper mapper = new ObjectMapper();
         User user = mapper.readValue(userJson, User.class);
-        
+
         User existingUser = userService.findUserById(id);
 
-        
         if (file != null && !file.isEmpty()) {
 
-            
             if (existingUser.getPhotoId() != null) {
                 photoService.deletePhoto(existingUser.getPhotoId());
             }
 
-            
             String photoId = photoService.uploadPhoto(file);
             user.setPhotoId(photoId);
 
         } else {
-            
+
             user.setPhotoId(existingUser.getPhotoId());
         }
 
@@ -170,7 +165,6 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    
     @GetMapping("users/{id}/photo")
     public ResponseEntity<?> getUserPhoto(@PathVariable String id) throws Exception {
 
@@ -191,33 +185,45 @@ public class UserController {
                         file.getMetadata().getString("_contentType")))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + file.getFilename() + "\"")
-                .body((org.springframework.core.io.Resource)
-                        new InputStreamResource(
-                                photoService.getResource(file).getInputStream()
-                        ));
+                .body((org.springframework.core.io.Resource) new InputStreamResource(
+                        photoService.getResource(file).getInputStream()));
     }
 
     @PutMapping("users/admin/block/{id}")
-    public User blocUser(@PathVariable String id) {
-        User entity = userService.blocUser(id);
-        
-        return entity;
+    public ResponseEntity<User> blockUser(@PathVariable String id) {
+        User user = userService.blockUser(id);
+        return ResponseEntity.ok(user);
     }
 
+    @PutMapping("users/admin/unblock/{id}")
+    public ResponseEntity<User> unblockUser(@PathVariable String id) {
+        User user = userService.unblockUser(id);
+        return ResponseEntity.ok(user);
+    }
 
+    @PutMapping("users/admin/make-admin/{id}")
+    public ResponseEntity<User> makeAdmin(@PathVariable String id) {
+        User user = userService.makeAdmin(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("users/admin/make-user/{id}")
+    public ResponseEntity<User> makeUser(@PathVariable String id) {
+        User user = userService.makeUser(id);
+        return ResponseEntity.ok(user);
+    }
 
     @DeleteMapping("users/{id}/photo")
     public ResponseEntity<?> deleteUserPhoto(@PathVariable String id) {
-    
+
         User user = userService.findUserById(id);
-    
+
         if (user.getPhotoId() != null) {
             photoService.deletePhoto(user.getPhotoId());
             userService.removeUserPhoto(id);
         }
-    
+
         return ResponseEntity.ok().build();
     }
-    
 
 }
