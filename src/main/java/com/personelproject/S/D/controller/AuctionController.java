@@ -180,22 +180,22 @@ public class AuctionController {
         }
 
         try {
-
-            
-
             Auction updatedAuction = auctionService.placeBid(idAuction, idBidder, bidAmount);
 
             Notification notif = notificationService.save(updatedAuction.getSellerId(), updatedAuction.getId());
-            AuctionsBidsDeposit abd= auctionsBidsDepositService.findDepositsByAuctionIdAndType(idAuction, "bids");
+
+            // Check if deposit exists for this auction and type "bids"
+            AuctionsBidsDeposit abd = auctionsBidsDepositService.findDepositsByAuctionIdAndType(idAuction, "bids");
             if (abd != null) {
                 abd.setAmount(abd.getAmount() + bidAmount);
+                auctionsBidsDepositService.updateDeposit(abd); 
             } else {
                 abd = new AuctionsBidsDeposit();
                 abd.setType("bids");
                 abd.setAuctionId(idAuction);
                 abd.setAmount(bidAmount);
+                auctionsBidsDepositService.saveDeposit(abd); // Save new deposit
             }
-            auctionsBidsDepositService.updaDeposit(abd);
 
             return ResponseEntity.ok(Map.of("auction", updatedAuction, "notification", notif));
 
