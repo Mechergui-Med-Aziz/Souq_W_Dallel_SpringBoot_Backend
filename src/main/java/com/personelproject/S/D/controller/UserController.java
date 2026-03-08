@@ -197,6 +197,13 @@ public class UserController {
                         ));
     }
 
+    @PutMapping("users/admin/block/{id}")
+    public User blocUser(@PathVariable String id) {
+        User entity = userService.blocUser(id);
+        
+        return entity;
+    }
+
 
 
     @DeleteMapping("users/{id}/photo")

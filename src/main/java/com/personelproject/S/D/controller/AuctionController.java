@@ -21,8 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.personelproject.S.D.model.Auction;
+import com.personelproject.S.D.model.AuctionsBidsDeposit;
 import com.personelproject.S.D.model.Notification;
 import com.personelproject.S.D.service.AuctionService;
+import com.personelproject.S.D.service.AuctionsBidsDepositService;
 import com.personelproject.S.D.service.NotificationService;
 import com.personelproject.S.D.service.PhotoService;
 import com.personelproject.S.D.service.UserService;
@@ -40,6 +42,8 @@ public class AuctionController {
     private UserService userService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private AuctionsBidsDepositService auctionsBidsDepositService;
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createAuction(@RequestPart("auction") String auctionjson,
@@ -177,9 +181,21 @@ public class AuctionController {
 
         try {
 
+            
+
             Auction updatedAuction = auctionService.placeBid(idAuction, idBidder, bidAmount);
 
             Notification notif = notificationService.save(updatedAuction.getSellerId(), updatedAuction.getId());
+            AuctionsBidsDeposit abd= auctionsBidsDepositService.findDepositsByAuctionIdAndType(idAuction, "bids");
+            if (abd != null) {
+                abd.setAmount(abd.getAmount() + bidAmount);
+            } else {
+                abd = new AuctionsBidsDeposit();
+                abd.setType("bids");
+                abd.setAuctionId(idAuction);
+                abd.setAmount(bidAmount);
+            }
+            auctionsBidsDepositService.updaDeposit(abd);
 
             return ResponseEntity.ok(Map.of("auction", updatedAuction, "notification", notif));
 

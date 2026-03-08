@@ -88,6 +88,12 @@ public class UserService implements UserDetailsService{
         return userRepository.save(existingUser);
     }
 
+    
+    public User blocUser(String id) {
+        User user = findUserById(id);
+        user.setStatus("Blocked");
+        return userRepository.save(user);
+    }
 
  
     @Override
@@ -100,7 +106,7 @@ public class UserService implements UserDetailsService{
         user.setPhotoId(null);
         return userRepository.save(user);
     }
+
+    
     
     }
-    
-
