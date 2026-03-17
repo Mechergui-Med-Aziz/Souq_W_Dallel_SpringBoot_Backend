@@ -34,11 +34,11 @@ public class AuctionsBidsDepositService {
         return auctionsBidsDepositRepository.findAll();
     }
 
-    public AuctionsBidsDeposit updaDeposit(AuctionsBidsDeposit deposit) {
+    public AuctionsBidsDeposit updateDeposit(AuctionsBidsDeposit deposit) {
         if (auctionsBidsDepositRepository.existsById(deposit.getId())) {
             return auctionsBidsDepositRepository.save(deposit);
         } else {
-            return null; // Or throw an exception
+            return auctionsBidsDepositRepository.save(deposit);
         }
     }
     

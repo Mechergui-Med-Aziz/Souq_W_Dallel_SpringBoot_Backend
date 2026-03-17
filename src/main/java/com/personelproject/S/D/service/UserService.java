@@ -1,6 +1,7 @@
 package com.personelproject.S.D.service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,7 @@ import com.personelproject.S.D.model.User;
 import com.personelproject.S.D.repository.UserRepository;
 
 @Service
-public class UserService implements UserDetailsService{
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -30,7 +31,7 @@ public class UserService implements UserDetailsService{
         user.setPhotoId(photoId);
         return userRepository.save(user);
     }
-    
+
     public User findUserByEmail(String email) {
         Optional<User> userByEmail = userRepository.findByEmail(email);
         if (userByEmail.isPresent()) {
@@ -44,29 +45,28 @@ public class UserService implements UserDetailsService{
         if (userByEmail.isPresent()) {
             return userByEmail.get();
         }
-    
+
         Optional<User> userByCin = userRepository.findByCin(cin);
         if (userByCin.isPresent()) {
             return userByCin.get();
         }
-    
-        return null; 
+
+        return null;
     }
-    
-    
 
     public User saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
-   
-
     public User findUserById(String id) {
         return userRepository.findById(id)
-            .orElseThrow(() ->new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found with id: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: " + id));
     }
-    
+
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
 
     public void deleteUserById(String id) {
         userRepository.deleteById(id);
@@ -88,25 +88,41 @@ public class UserService implements UserDetailsService{
         return userRepository.save(existingUser);
     }
 
-    
-    public User blocUser(String id) {
+    public User blockUser(String id) {
         User user = findUserById(id);
         user.setStatus("Blocked");
         return userRepository.save(user);
     }
 
- 
+    public User unblockUser(String id) {
+        User user = findUserById(id);
+        user.setStatus("Activated");
+        return userRepository.save(user);
+    }
+
+    public User makeAdmin(String id) {
+        User user = findUserById(id);
+        user.setRole("ADMIN");
+        return userRepository.save(user);
+    }
+
+    public User makeUser(String id) {
+        User user = findUserById(id);
+        user.setRole("User");
+        return userRepository.save(user);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user=findUserByEmail(email);
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+        User user = findUserByEmail(email);
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(),
+                new ArrayList<>());
     }
+
     public User removeUserPhoto(String userId) {
         User user = findUserById(userId);
         user.setPhotoId(null);
         return userRepository.save(user);
     }
 
-    
-    
-    }
+}
