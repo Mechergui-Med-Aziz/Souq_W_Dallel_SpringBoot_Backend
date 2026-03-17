@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.util.MultiValueMap;
 
 @Document(collection = "auctions")
 @Data
@@ -30,4 +31,6 @@ public class Auction {
     private Map<String, Double> bidders;
     private String sellerId;
     private Date expireDate;
+    private MultiValueMap<String, String> reviews;
+    private String adminId;
 }

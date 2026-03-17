@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.personelproject.S.D.model.Auction;
 import com.personelproject.S.D.model.Notification;
 import com.personelproject.S.D.repository.NotificationRepository;
 
@@ -12,6 +14,8 @@ import com.personelproject.S.D.repository.NotificationRepository;
 public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
+    @Autowired
+    private AuctionService auctionService;
 
     public Notification save(String ownerId,String auctionId) {
         Notification notification = Notification.builder()
@@ -24,6 +28,24 @@ public class NotificationService {
         .build();
 
         return notificationRepository.save(notification);
+
+    }
+
+    public Notification savePaymentAdminNotification(String auctionId,Double amount) {
+        Auction auction=auctionService.findAuctionById(auctionId);
+        if(auction!=null){
+        Notification notification = Notification.builder()
+        .userId(auction.getAdminId())
+        .auctionId(auctionId)
+        .message("Paiement de "+amount+" DT effectué pour l'enchère dont numéro "+auctionId+" !")
+        .type(Notification.Type.AUCTION_ENDING)
+        .isRead(false)
+        .createdAt(LocalDateTime.now())
+        .build();
+
+        return notificationRepository.save(notification);
+        }
+        return null;
 
     }
 

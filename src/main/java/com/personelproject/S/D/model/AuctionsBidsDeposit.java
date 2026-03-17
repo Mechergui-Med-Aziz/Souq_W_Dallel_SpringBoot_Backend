@@ -19,8 +19,15 @@ public class AuctionsBidsDeposit {
     private String id;
 
     private String auctionId;
-    private String type; // "auction" or "bids"
+    private Type type; // "auction" or "bids"
     private Double amount;
+    
+    
+    public enum Type{
+        AUCTION, BIDS
+    }
 
     
 }
+
+    

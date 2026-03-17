@@ -1,5 +1,6 @@
 package com.personelproject.S.D.controller;
 
+import com.personelproject.S.D.service.EmailService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.personelproject.S.D.model.Auction;
 import com.personelproject.S.D.model.AuctionsBidsDeposit;
 import com.personelproject.S.D.model.Notification;
+import com.personelproject.S.D.model.User;
 import com.personelproject.S.D.service.AuctionService;
 import com.personelproject.S.D.service.AuctionsBidsDepositService;
 import com.personelproject.S.D.service.NotificationService;
@@ -31,9 +33,15 @@ import com.personelproject.S.D.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
 
+
+
+
+
 @RestController
 @RequestMapping("api/auctions")
 public class AuctionController {
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private AuctionService auctionService;
     @Autowired
@@ -44,6 +52,8 @@ public class AuctionController {
     private NotificationService notificationService;
     @Autowired
     private AuctionsBidsDepositService auctionsBidsDepositService;
+
+    
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createAuction(@RequestPart("auction") String auctionjson,
@@ -136,6 +146,10 @@ public class AuctionController {
     public List<Auction> getAllAuctions() {
         return auctionService.findAllAuctions();
     }
+    @GetMapping("/auctions/{status}")
+    public List<Auction> getAuctionsByStatus(@PathVariable String status) {
+        return auctionService.findAuctionByStatus(status);
+    }
 
     @GetMapping("/seller/{sellerId}")
     public ResponseEntity<?> getAuctionsBySellerId(@PathVariable String sellerId) {
@@ -191,7 +205,7 @@ public class AuctionController {
                 auctionsBidsDepositService.updateDeposit(abd); 
             } else {
                 abd = new AuctionsBidsDeposit();
-                abd.setType("bids");
+                abd.setType(AuctionsBidsDeposit.Type.BIDS);
                 abd.setAuctionId(idAuction);
                 abd.setAmount(bidAmount);
                 auctionsBidsDepositService.saveDeposit(abd); // Save new deposit
@@ -203,5 +217,60 @@ public class AuctionController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/auction/addReview/{auctionId}/{reviewerId}/{review}")
+    public ResponseEntity<?> addReview(@PathVariable String auctionId, @PathVariable String reviewerId, @PathVariable String review) {
+        Auction auction = auctionService.findAuctionById(auctionId);
+        if (auction == null) {
+            return ResponseEntity.notFound().build();
+        }
+        auctionService.addReview(auctionId, reviewerId, review);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/auction/reviews/{auctionId}")
+    public ResponseEntity<?> getReviews(@PathVariable String auctionId) {
+        Auction auction = auctionService.findAuctionById(auctionId);
+        if (auction == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(auctionService.getReviews(auctionId));
+        
+    }
+
+
+    @PutMapping("auction/{auctionId}/{adminId}/{status}")
+    public ResponseEntity<?> denyApproveAuction(@PathVariable String auctionId,@PathVariable String adminId, @PathVariable String status) {
+        Auction auction=auctionService.findAuctionById(auctionId);
+        if(auction!=null){
+            auctionService.DenyApproveAuction(auctionId, status, adminId);
+            return ResponseEntity.ok(auction);
+        }
+        
+        return ResponseEntity.badRequest().build();
+    }
+
+    @GetMapping("/auction/ended/{auctionId}")
+    public ResponseEntity<?> wonnedAuction(@PathVariable String auctionId) {
+        Auction auction = auctionService.findAuctionById(auctionId);
+        if (auction == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String winnerId = auction.getBidders().entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        User winner= userService.findUserById(winnerId);
+        auction.setStatus("Ended");
+        emailService.sendAuctionWinEmail(winner, auctionId);
+        return ResponseEntity.ok().build();
+        
+
+    }
+    
+    
+    
+    
 
 }

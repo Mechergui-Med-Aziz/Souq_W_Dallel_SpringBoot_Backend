@@ -37,6 +37,27 @@ public void sendPasswordResetcode(String toEmail, User u) {
     emailSender.send(message);
     }
 
+    public void sendAuctionWinEmail(User u, String auctionTitle) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("souq.w.dallel@gmail.com");
+        message.setTo(u.getEmail());
+        message.setSubject("Félicitations ! Vous avez gagné l'enchère");
+    
+        message.setText(
+            "Bonjour " + u.getFirstname() + ",\n\n" +
+            "Félicitations ! 🎉\n\n" +
+            "Vous avez remporté l'enchère pour : \"" + auctionTitle + "\".\n\n" +
+            "Nous vous invitons à effectuer le paiement dans un délai de 24 heures afin de finaliser votre achat.\n\n" +
+            "⚠️ Passé ce délai, l'enchère sera automatiquement attribuée au prochain enchérisseur.\n\n" +
+            "Si vous avez des questions, n'hésitez pas à contacter notre support.\n\n" +
+            "Cordialement,\n" +
+            "L'équipe S&D Auction\n" +
+            "souq.w.dallel@gmail.com"
+        );
+    
+        emailSender.send(message);
+    }
+
 public String sendConfirmationCode(String toEmail) {
     String code = generateRandomCode();
 

@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.personelproject.S.D.model.Auction;
@@ -60,6 +62,31 @@ public class AuctionService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Bid must be higher than current bid for bidder: " + bidderId);
         }
+    }
+
+    public Auction addReview(String auctionId, String reviewerId, String review) {
+        Auction auction = findAuctionById(auctionId);
+        if (auction.getReviews() == null) {
+            auction.setReviews(new LinkedMultiValueMap<>());
+        }
+        auction.getReviews().add(reviewerId, review);
+        return auctionRepository.save(auction);
+    }
+
+    public MultiValueMap<String, String> getReviews(String auctionId) {
+        Auction auction = findAuctionById(auctionId);
+        return auction.getReviews();
+    }
+
+    public List<Auction> findAuctionByStatus(String status){
+        return auctionRepository.findByStatus(status);
+    }
+
+    public Auction DenyApproveAuction(String auctionId,String status,String adminId){
+        Auction auction = findAuctionById(auctionId);
+        auction.setStatus(status);
+        auction.setAdminId(adminId);
+        return auctionRepository.save(auction);
     }
 
 }
