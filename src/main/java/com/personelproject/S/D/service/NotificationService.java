@@ -17,18 +17,22 @@ public class NotificationService {
     @Autowired
     private AuctionService auctionService;
 
-    public Notification save(String ownerId,String auctionId) {
+    public Notification save(String ownerId, String auctionId) {
         Notification notification = Notification.builder()
-        .userId(ownerId)
-        .auctionId(auctionId)
-        .message("Quelqu’un a surenchéri sur votre enchère !")
-        .type(Notification.Type.BID_PLACED)
-        .isRead(false)
-        .createdAt(LocalDateTime.now())
-        .build();
+                .userId(ownerId)
+                .auctionId(auctionId)
+                .message("Quelqu’un a surenchéri sur votre enchère !")
+                .type(Notification.Type.BID_PLACED)
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
+                .build();
 
         return notificationRepository.save(notification);
 
+    }
+    
+    public Notification saveNotification(Notification notification) {
+        return notificationRepository.save(notification);
     }
 
     public Notification savePaymentAdminNotification(String auctionId,Double amount) {

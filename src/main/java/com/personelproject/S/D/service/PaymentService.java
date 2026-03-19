@@ -9,6 +9,8 @@ import com.stripe.param.PaymentIntentCreateParams;
 import com.personelproject.S.D.model.AuctionsBidsDeposit;
 import com.stripe.Stripe;
 
+import jakarta.annotation.PostConstruct;
+
 @Service
 public class PaymentService {
 
@@ -18,13 +20,16 @@ public class PaymentService {
     @Autowired
     private AuctionsBidsDepositService auctionsBidsDepositService;
 
-    public String createPaymentIntent(Long amount) throws Exception {
-
+    @PostConstruct
+    public void init() {
         Stripe.apiKey = secretKey;
+        System.out.println("Stripe initialized with API key");
+    }
 
+    public String createPaymentIntent(Long amount) throws Exception {
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(amount) // déjà en millimes
-                .setCurrency("eur") // devise correcte
+                .setAmount(amount) 
+                .setCurrency("eur")
                 .build();
 
         PaymentIntent intent = PaymentIntent.create(params);
@@ -39,16 +44,18 @@ public class PaymentService {
         AuctionsBidsDeposit saving = auctionsBidsDepositService.saveDeposit(deposit);
 
         if (saving != null) {
+            Long amountInMillimes = (long) (amount * 1000);
+
+            System.out.println("Converting amount " + amount + " TND to " + amountInMillimes + " millimes");
+
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount((long) (amount * 100)) // convertir en millimes
-                    .setCurrency("eur") // devise correcte
+                    .setAmount(amountInMillimes)
+                    .setCurrency("eur")
                     .build();
             PaymentIntent intent = PaymentIntent.create(params);
             return intent.getClientSecret();
-
         }
 
         return null;
-
     }
 }
