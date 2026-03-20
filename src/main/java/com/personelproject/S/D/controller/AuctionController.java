@@ -1,6 +1,8 @@
 package com.personelproject.S.D.controller;
 
 import com.personelproject.S.D.service.EmailService;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -256,17 +258,47 @@ public class AuctionController {
         if (auction == null) {
             return ResponseEntity.notFound().build();
         }
+
+        // Check if already processed
+        if ("Ended".equals(auction.getStatus())) {
+            System.out.println("Auction already processed, skipping");
+            return ResponseEntity.ok().build();
+        }
+
         String winnerId = auction.getBidders().entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse(null);
 
-        User winner= userService.findUserById(winnerId);
-        auction.setStatus("Ended");
-        emailService.sendAuctionWinEmail(winner, auctionId);
-        return ResponseEntity.ok().build();
-        
+        if (winnerId != null) {
+            User winner = userService.findUserById(winnerId);
 
+            // Update auction status and save to database
+            auction.setStatus("ended");
+            auctionService.updateAuction(auction);
+
+            // Send email
+            emailService.sendAuctionWinEmail(winner, auction.getTitle());
+
+            // Create notification for winner
+            Notification notification = Notification.builder()
+                    .userId(winnerId)
+                    .auctionId(auctionId)
+                    .message("Félicitations ! Vous avez gagné l'enchère : " + auction.getTitle())
+                    .type(Notification.Type.AUCTION_WON)
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            // Save notification to database
+            notificationService.saveNotification(notification);
+
+            System.out.println("Winner notification created for user: " + winnerId);
+        } else {
+            System.out.println("No winner found for auction: " + auctionId);
+        }
+
+        return ResponseEntity.ok().build();
     }
     
     
