@@ -189,16 +189,26 @@ public class UserController {
                         photoService.getResource(file).getInputStream()));
     }
 
-    @PutMapping("users/admin/block/{id}")
-    public ResponseEntity<User> blockUser(@PathVariable String id) {
-        User user = userService.blockUser(id);
-        return ResponseEntity.ok(user);
+    @PutMapping("users/admin/block/{id}/{days}")
+    public ResponseEntity<User> blockUser(@PathVariable String id,@PathVariable int days) {
+        User user=userService.findUserById(id);
+        if(user!=null){
+        userService.blockUser(id);
+        emailService.sendAccountBlockEmail(id, days);
+        return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("users/admin/unblock/{id}")
     public ResponseEntity<User> unblockUser(@PathVariable String id) {
-        User user = userService.unblockUser(id);
-        return ResponseEntity.ok(user);
+        User user=userService.findUserById(id);
+        if(user!=null){
+        userService.unblockUser(id);
+        emailService.sendAccountUnblockEmail(id);
+        return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("users/admin/make-admin/{id}")

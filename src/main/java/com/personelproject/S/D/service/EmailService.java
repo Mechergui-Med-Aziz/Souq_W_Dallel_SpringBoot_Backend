@@ -107,6 +107,53 @@ public void sendActivationAccountEmail(String toEmail) {
     emailSender.send(message);
 }
 
+public void sendAccountBlockEmail(String toEmail, int days) {
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setFrom("souq.w.dallel@gmail.com");
+    message.setTo(toEmail);
+    message.setSubject("Notification de suspension temporaire de votre compte – S&D Auction");
+
+    User u = userService.findUserByEmail(toEmail);
+
+    message.setText(
+        "Bonjour " + u.getFirstname() + ",\n\n" +
+        "Nous vous informons que votre compte sur la plateforme S&D Auction a été temporairement suspendu.\n\n" +
+        "Cette suspension est due à une violation des règles d’utilisation de la plateforme.\n\n" +
+        "Durée de la suspension : " + days + " jour(s).\n\n" +
+        "Pendant cette période, vous ne pourrez pas participer aux enchères ni effectuer d’actions sur votre compte.\n\n" +
+        "Nous vous invitons à consulter les règles de la plateforme afin d’éviter toute nouvelle infraction.\n\n" +
+        "Si vous pensez qu’il s’agit d’une erreur ou si vous souhaitez obtenir plus d’informations, veuillez contacter notre support.\n\n" +
+        "Cordialement,\n" +
+        "L’équipe S&D Auction\n" +
+        "souq.w.dallel@gmail.com"
+    );
+
+    emailSender.send(message);
+}
+
+public void sendAccountUnblockEmail(String toEmail) {
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setFrom("souq.w.dallel@gmail.com");
+    message.setTo(toEmail);
+    message.setSubject("Votre compte a été réactivé – S&D Auction");
+
+    User u = userService.findUserByEmail(toEmail);
+
+    message.setText(
+        "Bonjour " + u.getFirstname() + ",\n\n" +
+        "Nous vous informons que la suspension temporaire appliquée à votre compte S&D Auction a pris fin.\n\n" +
+        "Votre compte est désormais de nouveau actif et vous pouvez accéder à toutes les fonctionnalités de la plateforme, " +
+        "y compris participer aux enchères et gérer votre profil.\n\n" +
+        "Nous vous rappelons de respecter les règles d’utilisation de la plateforme afin d’éviter toute nouvelle suspension.\n\n" +
+        "Si vous avez des questions ou besoin d’assistance, notre équipe de support reste à votre disposition.\n\n" +
+        "Cordialement,\n" +
+        "L’équipe S&D Auction\n" +
+        "souq.w.dallel@gmail.com"
+    );
+
+    emailSender.send(message);
+}
+
 
 
 

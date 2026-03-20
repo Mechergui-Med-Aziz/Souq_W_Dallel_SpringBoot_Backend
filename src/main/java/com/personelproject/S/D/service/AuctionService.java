@@ -10,6 +10,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.personelproject.S.D.model.Auction;
+import com.personelproject.S.D.model.User;
 import com.personelproject.S.D.repository.AuctionRepository;
 
 @Service
@@ -73,6 +74,24 @@ public class AuctionService {
         return auctionRepository.save(auction);
     }
 
+    public Auction updateReview(String auctionId, String reviewerId, String review,String newReview ){
+        Auction auction = findAuctionById(auctionId);
+        List<String> values = auction.getReviews().get(reviewerId);
+
+        for (int i = 0; i < values.size(); i++) {
+            if (values.get(i).equals(review)) {
+                values.set(i, newReview);
+            }
+    }
+        return auction;
+    }
+
+    public Auction deleteReview(String auctionId, String reviewerId, String review,String newReview ){
+        Auction auction = findAuctionById(auctionId);
+        auction.getReviews().get(reviewerId).remove(review);
+        return auction;
+    }
+
     public MultiValueMap<String, String> getReviews(String auctionId) {
         Auction auction = findAuctionById(auctionId);
         return auction.getReviews();
@@ -88,5 +107,19 @@ public class AuctionService {
         auction.setAdminId(adminId);
         return auctionRepository.save(auction);
     }
+
+    public User getBuyer(String auctionId){
+        Auction auction=findAuctionById(auctionId);
+        if(auction.getStatus().equals("ended")){
+            String buyerId=auction.getBidders().entrySet().stream()
+                    .max((entry1, entry2) -> Double.compare(entry1.getValue(), entry2.getValue()))
+                    .map(entry -> entry.getKey())
+                    .orElse(null);
+            User buyer=new User();
+            buyer.setId(buyerId);
+            return buyer;
+        }
+        return null;
+    } 
 
 }

@@ -240,6 +240,24 @@ public class AuctionController {
         
     }
 
+    @PutMapping("auction/updateReview/{auctionId}/{reviewerId}/{review}/{newReview}")
+    public ResponseEntity<?> updateReview(@PathVariable String auctionId, @PathVariable String reviewerId,@PathVariable String review, @PathVariable String newReview) {
+        Auction auction=auctionService.findAuctionById(auctionId);
+        if(auction==null){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(auctionService.updateReview(auctionId, reviewerId, review, newReview));
+    }
+    
+    @PutMapping("auction/deleteReview/{auctionId}/{reviewerId}/{review}/{newReview}")
+    public ResponseEntity<?> deleteRevieww(@PathVariable String auctionId, @PathVariable String reviewerId,@PathVariable String review, @PathVariable String newReview) {
+        Auction auction=auctionService.findAuctionById(auctionId);
+        if(auction==null){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(auctionService.deleteReview(auctionId, reviewerId, review, newReview));
+    }
+
 
     @PutMapping("auction/{auctionId}/{adminId}/{status}")
     public ResponseEntity<?> denyApproveAuction(@PathVariable String auctionId,@PathVariable String adminId, @PathVariable String status) {
@@ -253,7 +271,7 @@ public class AuctionController {
     }
 
     @GetMapping("/auction/ended/{auctionId}")
-    public ResponseEntity<?> wonnedAuction(@PathVariable String auctionId) {
+    public ResponseEntity<?> wonAuction(@PathVariable String auctionId) {
         Auction auction = auctionService.findAuctionById(auctionId);
         if (auction == null) {
             return ResponseEntity.notFound().build();

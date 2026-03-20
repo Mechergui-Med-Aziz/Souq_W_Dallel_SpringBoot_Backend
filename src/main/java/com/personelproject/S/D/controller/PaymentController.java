@@ -1,6 +1,11 @@
 package com.personelproject.S.D.controller;
 
+import com.personelproject.S.D.model.Notification;
+import com.personelproject.S.D.model.Parcel;
+import com.personelproject.S.D.service.AuctionService;
 import com.personelproject.S.D.service.NotificationService;
+import com.personelproject.S.D.service.ParcelService;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +28,10 @@ public class PaymentController {
     private NotificationService notificationService;
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private AuctionService auctionService;
+    @Autowired
+    private ParcelService parcelService;
 
     @PostMapping("/pay1dt")
     public ResponseEntity<?> createPayment() {
@@ -56,7 +65,20 @@ public class PaymentController {
 
                 // Send notification to admin
                 try {
-                    notificationService.savePaymentAdminNotification(auctionId, amount);
+                    Notification notif=notificationService.savePaymentAdminNotification(auctionId, amount);
+                    if(notif!=null){
+                        Parcel parcel=new Parcel();
+                        parcel.setAuctionId(auctionId);
+                        parcel.setAdminId(auctionService.findAuctionById(auctionId).getAdminId());
+                        parcel.setBuyerId(auctionService.getBuyer(auctionId).getId());
+                        parcel.setIsValid(null);
+                        parcel.setDestinationAdress(null);
+                        parcel.setPickUpAdress(null);
+                        parcel.setTransporterId(null);
+                        parcel.setDelivred(false);
+                        parcel=parcelService.saveParcel(parcel);
+                        
+                    }
                 } catch (Exception e) {
                     System.err.println("Failed to send admin notification: " + e.getMessage());
                 }
