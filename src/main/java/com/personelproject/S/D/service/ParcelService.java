@@ -15,7 +15,7 @@ public class ParcelService {
     @Autowired
     private ParcelRepository parcelRepository;
 
-     public Parcel saveParcel(Parcel parcel) {
+    public Parcel saveParcel(Parcel parcel) {
         return parcelRepository.save(parcel);
     }
 
@@ -28,7 +28,7 @@ public class ParcelService {
     public List<Parcel> findAllParcels() {
         return parcelRepository.findAll();
     }
-    
+
     public void deleteParcel(String id) {
         if (!parcelRepository.existsById(id)) {
             throw new ResponseStatusException(
@@ -45,22 +45,28 @@ public class ParcelService {
         return parcelRepository.save(parcel);
     }
 
-    public Parcel validateUnvalidateParcel(String id,Boolean isValid,String description){
-        Parcel parcel=findParcelById(id);
+    public Parcel validateUnvalidateParcel(String id, Boolean isValid, String description) {
+        Parcel parcel = findParcelById(id);
         parcel.setIsValid(isValid);
         parcel.setUnvalidDescription(description);
         return saveParcel(parcel);
-
     }
-    
-    public Parcel delivredParcel(String id){
-        Parcel parcel=findParcelById(id);
+
+    public Parcel delivredParcel(String id) {
+        Parcel parcel = findParcelById(id);
         parcel.setDelivred(true);
-        
         return saveParcel(parcel);
     }
 
-    public List<Parcel> findByAdminId(String id){
+    public List<Parcel> findByAdminId(String id) {
         return parcelRepository.findByAdminId(id);
+    }
+
+    public List<Parcel> findByTransporterId(String transporterId) {
+        return parcelRepository.findByTransporterId(transporterId);
+    }
+
+    public List<Parcel> findByBuyerId(String buyerId) {
+        return parcelRepository.findByBuyerId(buyerId);
     }
 }

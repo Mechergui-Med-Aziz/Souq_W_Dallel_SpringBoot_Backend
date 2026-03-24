@@ -1,5 +1,6 @@
 package com.personelproject.S.D.controller;
 
+import com.personelproject.S.D.model.Auction;
 import com.personelproject.S.D.model.Notification;
 import com.personelproject.S.D.model.Parcel;
 import com.personelproject.S.D.service.AuctionService;
@@ -63,24 +64,34 @@ public class PaymentController {
                 Map<String, String> response = new HashMap<>();
                 response.put("clientSecret", clientSecret);
 
-                // Send notification to admin
                 try {
-                    Notification notif=notificationService.savePaymentAdminNotification(auctionId, amount);
-                    if(notif!=null){
-                        Parcel parcel=new Parcel();
+                    Notification notif = notificationService.savePaymentAdminNotification(auctionId, amount);
+                    if (notif != null) {
+                        Auction auction = auctionService.findAuctionById(auctionId);
+                        Parcel parcel = new Parcel();
                         parcel.setAuctionId(auctionId);
-                        parcel.setAdminId(auctionService.findAuctionById(auctionId).getAdminId());
+                        // Set the adminId from the auction (the admin who approved it)
+                        String adminId = auction.getAdminId();
+                        if (adminId == null) {
+                            // If auction doesn't have adminId (legacy), try to get from the notification or
+                            // set null
+                            // For now, set to null and admins will see it in dashboard
+                            System.err.println("Warning: Auction " + auctionId + " has no adminId set");
+                        }
+                        parcel.setAdminId(adminId);
                         parcel.setBuyerId(auctionService.getBuyer(auctionId).getId());
                         parcel.setIsValid(null);
                         parcel.setDestinationAdress(null);
                         parcel.setPickUpAdress(null);
+                        parcel.setUnvalidDescription(null);
                         parcel.setTransporterId(null);
                         parcel.setDelivred(false);
-                        parcel=parcelService.saveParcel(parcel);
-                        
+                        parcel = parcelService.saveParcel(parcel);
+                        System.out.println("Created parcel with adminId: " + adminId);
                     }
                 } catch (Exception e) {
                     System.err.println("Failed to send admin notification: " + e.getMessage());
+                    e.printStackTrace();
                 }
 
                 return ResponseEntity.ok(response);

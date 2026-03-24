@@ -190,23 +190,23 @@ public class UserController {
     }
 
     @PutMapping("users/admin/block/{id}/{days}")
-    public ResponseEntity<User> blockUser(@PathVariable String id,@PathVariable int days) {
-        User user=userService.findUserById(id);
-        if(user!=null){
-        userService.blockUser(id);
-        emailService.sendAccountBlockEmail(id, days);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<User> blockUser(@PathVariable String id, @PathVariable int days) {
+        User user = userService.findUserById(id);
+        if (user != null) {
+            userService.blockUser(id);
+            emailService.sendAccountBlockEmail(user.getEmail(), days);
+            return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
     }
 
     @PutMapping("users/admin/unblock/{id}")
     public ResponseEntity<User> unblockUser(@PathVariable String id) {
-        User user=userService.findUserById(id);
-        if(user!=null){
-        userService.unblockUser(id);
-        emailService.sendAccountUnblockEmail(id);
-        return ResponseEntity.ok().build();
+        User user = userService.findUserById(id);
+        if(user != null){
+            userService.unblockUser(id);
+            emailService.sendAccountUnblockEmail(user.getEmail());
+            return ResponseEntity.ok(user);
         }
         return ResponseEntity.notFound().build();
     }
@@ -223,6 +223,24 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PutMapping("users/admin/make-transporter/{id}")
+    public ResponseEntity<User> makeTransporter(@PathVariable String id) {
+        User user = userService.makeTransporter(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("users/admin/remove-transporter/{id}")
+    public ResponseEntity<User> removeTransporter(@PathVariable String id) {
+        User user = userService.makeUser(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("users/transporters/all")
+    public ResponseEntity<List<User>> getAllTransporters() {
+        List<User> transporters = userService.findUsersByRole("Transporter");
+        return ResponseEntity.ok(transporters);
+    }
+
     @DeleteMapping("users/{id}/photo")
     public ResponseEntity<?> deleteUserPhoto(@PathVariable String id) {
 
@@ -235,5 +253,7 @@ public class UserController {
 
         return ResponseEntity.ok().build();
     }
+
+
 
 }

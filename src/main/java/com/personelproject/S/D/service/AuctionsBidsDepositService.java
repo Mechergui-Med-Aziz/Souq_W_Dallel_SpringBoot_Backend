@@ -1,6 +1,6 @@
 package com.personelproject.S.D.service;
 
-
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +15,9 @@ public class AuctionsBidsDepositService {
     private AuctionsBidsDepositRepository auctionsBidsDepositRepository;
 
     public AuctionsBidsDeposit saveDeposit(AuctionsBidsDeposit deposit) {
+        if (deposit.getCreatedAt() == null) {
+            deposit.setCreatedAt(LocalDateTime.now());
+        }
         return auctionsBidsDepositRepository.save(deposit);
     }
 
@@ -22,25 +25,19 @@ public class AuctionsBidsDepositService {
         return auctionsBidsDepositRepository.findById(id).orElse(null);
     }
 
-    public AuctionsBidsDeposit findDepositsByAuctionIdAndType(String auctionId,String type) {
-        return auctionsBidsDepositRepository.findByAuctionIdAndType(auctionId,type);
+    public AuctionsBidsDeposit findDepositsByAuctionIdAndType(String auctionId, String type) {
+        return auctionsBidsDepositRepository.findByAuctionIdAndType(auctionId, type);
     }
+
     public List<AuctionsBidsDeposit> findDepositsByAuctionId(String auctionId) {
         return auctionsBidsDepositRepository.findByAuctionId(auctionId);
     }
-    
 
     public List<AuctionsBidsDeposit> findAllDeposits() {
         return auctionsBidsDepositRepository.findAll();
     }
 
     public AuctionsBidsDeposit updateDeposit(AuctionsBidsDeposit deposit) {
-        if (auctionsBidsDepositRepository.existsById(deposit.getId())) {
-            return auctionsBidsDepositRepository.save(deposit);
-        } else {
-            return auctionsBidsDepositRepository.save(deposit);
-        }
+        return auctionsBidsDepositRepository.save(deposit);
     }
-    
 }
-

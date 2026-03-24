@@ -69,8 +69,24 @@ public class AuctionController {
         }
 
         auction.setPhotoId(photoIds);
+        auction.setStatus("pending");
 
         Auction createdAuction = auctionService.saveAuction(auction);
+
+        // Notify all admins about new auction pending approval
+        List<User> admins = userService.findUsersByRole("ADMIN");
+        for (User admin : admins) {
+            Notification notification = Notification.builder()
+                    .userId(admin.getId())
+                    .auctionId(createdAuction.getId())
+                    .message("Nouvelle enchère en attente d'approbation: " + createdAuction.getTitle())
+                    .type(Notification.Type.AUCTION_PENDING)
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationService.saveNotification(notification);
+        }
+
         return ResponseEntity.ok(createdAuction);
     }
 
@@ -260,13 +276,15 @@ public class AuctionController {
 
 
     @PutMapping("auction/{auctionId}/{adminId}/{status}")
-    public ResponseEntity<?> denyApproveAuction(@PathVariable String auctionId,@PathVariable String adminId, @PathVariable String status) {
-        Auction auction=auctionService.findAuctionById(auctionId);
-        if(auction!=null){
-            auctionService.DenyApproveAuction(auctionId, status, adminId);
+    public ResponseEntity<?> denyApproveAuction(@PathVariable String auctionId, @PathVariable String adminId,
+            @PathVariable String status) {
+        Auction auction = auctionService.findAuctionById(auctionId);
+        if (auction != null) {
+            auction.setAdminId(adminId);
+            auction.setStatus(status);
+            auctionService.updateAuction(auction);
             return ResponseEntity.ok(auction);
         }
-        
         return ResponseEntity.badRequest().build();
     }
 
@@ -278,7 +296,7 @@ public class AuctionController {
         }
 
         // Check if already processed
-        if ("Ended".equals(auction.getStatus())) {
+        if ("ended".equals(auction.getStatus())) {
             System.out.println("Auction already processed, skipping");
             return ResponseEntity.ok().build();
         }
@@ -312,15 +330,12 @@ public class AuctionController {
             notificationService.saveNotification(notification);
 
             System.out.println("Winner notification created for user: " + winnerId);
+            System.out.println("Auction status set to ended, payment not yet made");
         } else {
             System.out.println("No winner found for auction: " + auctionId);
         }
 
         return ResponseEntity.ok().build();
     }
-    
-    
-    
-    
 
 }
