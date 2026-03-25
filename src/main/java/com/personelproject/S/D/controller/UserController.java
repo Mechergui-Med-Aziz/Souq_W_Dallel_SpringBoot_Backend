@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.personelproject.S.D.model.Parcel;
 import com.personelproject.S.D.model.User;
 import com.personelproject.S.D.model.UserResetPasswordRequest;
 import com.personelproject.S.D.service.EmailService;
+import com.personelproject.S.D.service.ParcelService;
 import com.personelproject.S.D.service.PhotoService;
 import com.personelproject.S.D.service.UserService;
 
@@ -41,6 +43,8 @@ public class UserController {
     private EmailService emailService;
     @Autowired
     private PhotoService photoService;
+    @Autowired
+    private ParcelService parcelService;
 
     @GetMapping("users/all")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -231,6 +235,15 @@ public class UserController {
 
     @PutMapping("users/admin/remove-transporter/{id}")
     public ResponseEntity<User> removeTransporter(@PathVariable String id) {
+        List<Parcel> parcels = parcelService.findByTransporterId(id);
+        if(parcels.size() > 0){
+            for (Parcel parcel : parcels) {
+                parcel.setTransporterId(null);
+                
+            }
+            
+        }
+        
         User user = userService.makeUser(id);
         return ResponseEntity.ok(user);
     }

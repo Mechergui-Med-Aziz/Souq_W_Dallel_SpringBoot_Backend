@@ -219,13 +219,13 @@ public class AuctionController {
             // Check if deposit exists for this auction and type "bids"
             AuctionsBidsDeposit abd = auctionsBidsDepositService.findDepositsByAuctionIdAndType(idAuction, "bids");
             if (abd != null) {
-                abd.setAmount(abd.getAmount() + bidAmount);
+                abd.setAmount(abd.getAmount() + 1D);
                 auctionsBidsDepositService.updateDeposit(abd); 
             } else {
                 abd = new AuctionsBidsDeposit();
                 abd.setType(AuctionsBidsDeposit.Type.BIDS);
                 abd.setAuctionId(idAuction);
-                abd.setAmount(bidAmount);
+                abd.setAmount(1D);
                 auctionsBidsDepositService.saveDeposit(abd); // Save new deposit
             }
 

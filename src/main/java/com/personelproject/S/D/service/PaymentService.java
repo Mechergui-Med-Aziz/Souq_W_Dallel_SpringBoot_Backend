@@ -39,7 +39,7 @@ public class PaymentService {
     public String payAuction(String id, Double amount) throws Exception {
         AuctionsBidsDeposit deposit = new AuctionsBidsDeposit();
         deposit.setAuctionId(id);
-        deposit.setAmount(amount);
+        deposit.setAmount(amount*0.05);
         deposit.setType(AuctionsBidsDeposit.Type.AUCTION);
         AuctionsBidsDeposit saving = auctionsBidsDepositService.saveDeposit(deposit);
 

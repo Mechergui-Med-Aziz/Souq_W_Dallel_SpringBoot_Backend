@@ -1,6 +1,9 @@
 package com.personelproject.S.D.model;
 
 import lombok.*;
+
+import java.sql.Date;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,6 +21,7 @@ public class Parcel {
     private Boolean isValid;
     private String buyerId;
     private boolean isDelivred;
+    private Date delivredAt;
 
     private String transporterId;
     private String pickUpAdress;
