@@ -30,6 +30,8 @@ public class Notification {
         BID_PLACED,
         AUCTION_WON,
         AUCTION_LOST,
-        AUCTION_ENDING
+        AUCTION_ENDING,
+        AUCTION_PENDING,
+        PARCEL_INVALID
     }
 }

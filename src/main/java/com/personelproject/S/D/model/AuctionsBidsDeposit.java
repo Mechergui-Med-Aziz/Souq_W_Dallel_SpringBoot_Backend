@@ -1,5 +1,7 @@
 package com.personelproject.S.D.model;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -19,8 +21,9 @@ public class AuctionsBidsDeposit {
     private String id;
 
     private String auctionId;
-    private Type type; // "auction" or "bids"
+    private Type type; 
     private Double amount;
+    private LocalDateTime createdAt;
     
     
     public enum Type{

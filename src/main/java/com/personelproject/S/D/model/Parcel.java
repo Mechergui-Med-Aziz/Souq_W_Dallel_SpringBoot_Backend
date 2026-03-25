@@ -21,9 +21,8 @@ public class Parcel {
 
     private String transporterId;
     private String pickUpAdress;
-    private String UnvalidDescription;
+    private String unvalidDescription;
     private String destinationAdress;
     private String adminId;
 
-    
 }

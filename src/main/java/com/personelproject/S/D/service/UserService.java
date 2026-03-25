@@ -112,6 +112,16 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    public User makeTransporter(String id) {
+        User user = findUserById(id);
+        user.setRole("Transporter");
+        return userRepository.save(user);
+    }
+
+    public List<User> findUsersByRole(String role) {
+        return userRepository.findByRole(role);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = findUserByEmail(email);

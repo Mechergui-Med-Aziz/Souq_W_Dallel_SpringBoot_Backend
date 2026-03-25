@@ -1,5 +1,6 @@
 package com.personelproject.S.D.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -19,6 +20,6 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     User findByCin(int cin);
 
-
+    List<User> findByRole(String role);
 
 }
