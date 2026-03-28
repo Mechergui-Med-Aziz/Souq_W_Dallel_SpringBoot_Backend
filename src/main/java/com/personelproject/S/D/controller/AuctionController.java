@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,10 +37,6 @@ import com.personelproject.S.D.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
 
-
-
-
-
 @RestController
 @RequestMapping("api/auctions")
 public class AuctionController {
@@ -54,8 +52,6 @@ public class AuctionController {
     private NotificationService notificationService;
     @Autowired
     private AuctionsBidsDepositService auctionsBidsDepositService;
-
-    
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createAuction(@RequestPart("auction") String auctionjson,
@@ -164,6 +160,7 @@ public class AuctionController {
     public List<Auction> getAllAuctions() {
         return auctionService.findAllAuctions();
     }
+
     @GetMapping("/auctions/{status}")
     public List<Auction> getAuctionsByStatus(@PathVariable String status) {
         return auctionService.findAuctionByStatus(status);
@@ -220,7 +217,7 @@ public class AuctionController {
             AuctionsBidsDeposit abd = auctionsBidsDepositService.findDepositsByAuctionIdAndType(idAuction, "bids");
             if (abd != null) {
                 abd.setAmount(abd.getAmount() + 1D);
-                auctionsBidsDepositService.updateDeposit(abd); 
+                auctionsBidsDepositService.updateDeposit(abd);
             } else {
                 abd = new AuctionsBidsDeposit();
                 abd.setType(AuctionsBidsDeposit.Type.BIDS);
@@ -236,16 +233,6 @@ public class AuctionController {
         }
     }
 
-    @PostMapping("/auction/addReview/{auctionId}/{reviewerId}/{review}")
-    public ResponseEntity<?> addReview(@PathVariable String auctionId, @PathVariable String reviewerId, @PathVariable String review) {
-        Auction auction = auctionService.findAuctionById(auctionId);
-        if (auction == null) {
-            return ResponseEntity.notFound().build();
-        }
-        auctionService.addReview(auctionId, reviewerId, review);
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping("/auction/reviews/{auctionId}")
     public ResponseEntity<?> getReviews(@PathVariable String auctionId) {
         Auction auction = auctionService.findAuctionById(auctionId);
@@ -253,27 +240,67 @@ public class AuctionController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(auctionService.getReviews(auctionId));
-        
+
     }
 
-    @PutMapping("auction/updateReview/{auctionId}/{reviewerId}/{review}/{newReview}")
-    public ResponseEntity<?> updateReview(@PathVariable String auctionId, @PathVariable String reviewerId,@PathVariable String review, @PathVariable String newReview) {
-        Auction auction=auctionService.findAuctionById(auctionId);
-        if(auction==null){
-            return ResponseEntity.notFound().build();
+    @PostMapping("auction/addReview/{auctionId}/{reviewerId}/{review}")
+    public ResponseEntity<?> addReview(@PathVariable String auctionId,
+            @PathVariable String reviewerId,
+            @PathVariable String review) {
+        try {
+            Auction auction = auctionService.findAuctionById(auctionId);
+            if (auction == null) {
+                return ResponseEntity.notFound().build();
+            }
+            boolean success = auctionService.addReview(auctionId, reviewerId, review);
+            if (success) {
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.badRequest().body("Failed to add review");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return ResponseEntity.ok(auctionService.updateReview(auctionId, reviewerId, review, newReview));
-    }
-    
-    @PutMapping("auction/deleteReview/{auctionId}/{reviewerId}/{review}/{newReview}")
-    public ResponseEntity<?> deleteRevieww(@PathVariable String auctionId, @PathVariable String reviewerId,@PathVariable String review, @PathVariable String newReview) {
-        Auction auction=auctionService.findAuctionById(auctionId);
-        if(auction==null){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(auctionService.deleteReview(auctionId, reviewerId, review, newReview));
     }
 
+    @PutMapping("auction/updateReview/{auctionId}/{reviewerId}/{oldReview}/{newReview}")
+    public ResponseEntity<?> updateReview(@PathVariable String auctionId,
+            @PathVariable String reviewerId,
+            @PathVariable String oldReview,
+            @PathVariable String newReview) {
+        try {
+            Auction auction = auctionService.findAuctionById(auctionId);
+            if (auction == null) {
+                return ResponseEntity.notFound().build();
+            }
+            boolean success = auctionService.updateReview(auctionId, reviewerId, oldReview, newReview);
+            if (success) {
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.badRequest().body("Failed to update review");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("auction/deleteReview/{auctionId}/{reviewerId}")
+    public ResponseEntity<?> deleteReview(
+            @PathVariable String auctionId,
+            @PathVariable String reviewerId,
+            @RequestParam String review) {
+        try {
+            Auction auction = auctionService.findAuctionById(auctionId);
+            if (auction == null) {
+                return ResponseEntity.notFound().build();
+            }
+            boolean success = auctionService.deleteReview(auctionId, reviewerId, review);
+            if (success) {
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.badRequest().body("Failed to delete review");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @PutMapping("auction/{auctionId}/{adminId}/{status}")
     public ResponseEntity<?> denyApproveAuction(@PathVariable String auctionId, @PathVariable String adminId,
