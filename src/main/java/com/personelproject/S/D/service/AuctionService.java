@@ -65,31 +65,74 @@ public class AuctionService {
         }
     }
 
-    public Auction addReview(String auctionId, String reviewerId, String review) {
-        Auction auction = findAuctionById(auctionId);
-        if (auction.getReviews() == null) {
-            auction.setReviews(new LinkedMultiValueMap<>());
+    public boolean addReview(String auctionId, String reviewerId, String review) {
+        Auction auction = auctionRepository.findById(auctionId).orElse(null);
+        if (auction == null)
+            return false;
+
+        MultiValueMap<String, String> reviews = auction.getReviews();
+        if (reviews == null) {
+            reviews = new LinkedMultiValueMap<>();
         }
-        auction.getReviews().add(reviewerId, review);
-        return auctionRepository.save(auction);
+
+        // Add review without timestamp
+        reviews.add(reviewerId, review);
+        auction.setReviews(reviews);
+        auctionRepository.save(auction);
+        return true;
     }
 
-    public Auction updateReview(String auctionId, String reviewerId, String review,String newReview ){
-        Auction auction = findAuctionById(auctionId);
-        List<String> values = auction.getReviews().get(reviewerId);
+    public boolean updateReview(String auctionId, String reviewerId, String oldReview, String newReview) {
+        Auction auction = auctionRepository.findById(auctionId).orElse(null);
+        if (auction == null)
+            return false;
 
-        for (int i = 0; i < values.size(); i++) {
-            if (values.get(i).equals(review)) {
-                values.set(i, newReview);
+        MultiValueMap<String, String> reviews = auction.getReviews();
+        if (reviews == null)
+            return false;
+
+        List<String> userReviews = reviews.get(reviewerId);
+        if (userReviews == null)
+            return false;
+
+        // Find and replace the old review
+        int index = userReviews.indexOf(oldReview);
+        if (index != -1) {
+            userReviews.set(index, newReview);
+            reviews.put(reviewerId, userReviews);
+            auction.setReviews(reviews);
+            auctionRepository.save(auction);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deleteReview(String auctionId, String reviewerId, String review) {
+        Auction auction = auctionRepository.findById(auctionId).orElse(null);
+        if (auction == null)
+            return false;
+
+        MultiValueMap<String, String> reviews = auction.getReviews();
+        if (reviews == null)
+            return false;
+
+        List<String> userReviews = reviews.get(reviewerId);
+        if (userReviews == null)
+            return false;
+
+        // Remove the review
+        boolean removed = userReviews.remove(review);
+        if (removed) {
+            if (userReviews.isEmpty()) {
+                reviews.remove(reviewerId);
+            } else {
+                reviews.put(reviewerId, userReviews);
             }
-    }
-        return auction;
-    }
-
-    public Auction deleteReview(String auctionId, String reviewerId, String review,String newReview ){
-        Auction auction = findAuctionById(auctionId);
-        auction.getReviews().get(reviewerId).remove(review);
-        return auction;
+            auction.setReviews(reviews);
+            auctionRepository.save(auction);
+            return true;
+        }
+        return false;
     }
 
     public MultiValueMap<String, String> getReviews(String auctionId) {
