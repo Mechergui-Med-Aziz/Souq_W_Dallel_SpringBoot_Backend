@@ -26,6 +26,7 @@ public class Auction {
     private String category;
 
     private String status;
+    private boolean isPaid = false;
 
     private List<String> photoId;
     private Map<String, Double> bidders;
