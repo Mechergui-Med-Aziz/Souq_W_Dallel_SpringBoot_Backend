@@ -123,7 +123,7 @@ public class ParcelController {
         Parcel parcel = parcelService.findParcelById(id);
         if (parcel != null) {
             parcel.setDelivred(true);
-            parcel.setDelivredAt(java.sql.Date.valueOf(LocalDateTime.now().toLocalDate()));
+            parcel.setDelivredAt(new java.util.Date());
             return ResponseEntity.ok(parcelService.updateParcel(parcel));
         }
         return ResponseEntity.notFound().build();

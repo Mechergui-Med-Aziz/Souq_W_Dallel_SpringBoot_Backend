@@ -58,26 +58,30 @@ public class PaymentController {
         try {
             System.out.println("Processing payment for auction: " + auctionId + " amount: " + amount);
 
+            Auction auction = auctionService.findAuctionById(auctionId);
+            if (auction == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Auction not found"));
+            }
+
+            // Process payment through Stripe
             String clientSecret = paymentService.payAuction(auctionId, amount);
 
             if (clientSecret != null) {
+                // Mark auction as paid in database
+                auction.setPaid(true);
+                auctionService.updateAuction(auction);
+                System.out.println("Auction " + auctionId + " marked as paid");
+
                 Map<String, String> response = new HashMap<>();
                 response.put("clientSecret", clientSecret);
 
+                // Create parcel for the auction (only if payment successful)
                 try {
                     Notification notif = notificationService.savePaymentAdminNotification(auctionId, amount);
                     if (notif != null) {
-                        Auction auction = auctionService.findAuctionById(auctionId);
                         Parcel parcel = new Parcel();
                         parcel.setAuctionId(auctionId);
-                        // Set the adminId from the auction (the admin who approved it)
                         String adminId = auction.getAdminId();
-                        if (adminId == null) {
-                            // If auction doesn't have adminId (legacy), try to get from the notification or
-                            // set null
-                            // For now, set to null and admins will see it in dashboard
-                            System.err.println("Warning: Auction " + auctionId + " has no adminId set");
-                        }
                         parcel.setAdminId(adminId);
                         parcel.setBuyerId(auctionService.getBuyer(auctionId).getId());
                         parcel.setIsValid(null);
@@ -87,10 +91,10 @@ public class PaymentController {
                         parcel.setTransporterId(null);
                         parcel.setDelivred(false);
                         parcel = parcelService.saveParcel(parcel);
-                        System.out.println("Created parcel with adminId: " + adminId);
+                        System.out.println("Created parcel with id: " + parcel.getId() + " for auction: " + auctionId);
                     }
                 } catch (Exception e) {
-                    System.err.println("Failed to send admin notification: " + e.getMessage());
+                    System.err.println("Failed to create parcel: " + e.getMessage());
                     e.printStackTrace();
                 }
 

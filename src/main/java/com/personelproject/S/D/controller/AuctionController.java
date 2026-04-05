@@ -333,33 +333,32 @@ public class AuctionController {
                 .map(Map.Entry::getKey)
                 .orElse(null);
 
+        // ALWAYS update auction status to ended (even with no winner)
+        auction.setStatus("ended");
+        auctionService.updateAuction(auction);
+
+        System.out.println("Auction " + auctionId + " status set to ended");
+        System.out.println("Winner ID: " + (winnerId != null ? winnerId : "No winner"));
+
         if (winnerId != null) {
             User winner = userService.findUserById(winnerId);
+            if (winner != null) {
+                // Send email
+                emailService.sendAuctionWinEmail(winner, auction.getTitle());
 
-            // Update auction status and save to database
-            auction.setStatus("ended");
-            auctionService.updateAuction(auction);
+                // Create notification for winner
+                Notification notification = Notification.builder()
+                        .userId(winnerId)
+                        .auctionId(auctionId)
+                        .message("Félicitations ! Vous avez gagné l'enchère : " + auction.getTitle())
+                        .type(Notification.Type.AUCTION_WON)
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
 
-            // Send email
-            emailService.sendAuctionWinEmail(winner, auction.getTitle());
-
-            // Create notification for winner
-            Notification notification = Notification.builder()
-                    .userId(winnerId)
-                    .auctionId(auctionId)
-                    .message("Félicitations ! Vous avez gagné l'enchère : " + auction.getTitle())
-                    .type(Notification.Type.AUCTION_WON)
-                    .isRead(false)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-
-            // Save notification to database
-            notificationService.saveNotification(notification);
-
-            System.out.println("Winner notification created for user: " + winnerId);
-            System.out.println("Auction status set to ended, payment not yet made");
-        } else {
-            System.out.println("No winner found for auction: " + auctionId);
+                notificationService.saveNotification(notification);
+                System.out.println("Winner notification created for user: " + winnerId);
+            }
         }
 
         return ResponseEntity.ok().build();
