@@ -27,7 +27,7 @@ public class AuctionsBidsDeposit {
     
     
     public enum Type{
-        AUCTION, BIDS
+        AUCTION, BIDS,CREATION
     }
 
     

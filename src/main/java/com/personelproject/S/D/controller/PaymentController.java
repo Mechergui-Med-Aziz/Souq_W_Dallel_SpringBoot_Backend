@@ -1,9 +1,11 @@
 package com.personelproject.S.D.controller;
 
 import com.personelproject.S.D.model.Auction;
+import com.personelproject.S.D.model.AuctionsBidsDeposit;
 import com.personelproject.S.D.model.Notification;
 import com.personelproject.S.D.model.Parcel;
 import com.personelproject.S.D.service.AuctionService;
+import com.personelproject.S.D.service.AuctionsBidsDepositService;
 import com.personelproject.S.D.service.NotificationService;
 import com.personelproject.S.D.service.ParcelService;
 
@@ -33,6 +35,8 @@ public class PaymentController {
     private AuctionService auctionService;
     @Autowired
     private ParcelService parcelService;
+    @Autowired
+    private AuctionsBidsDepositService auctionsBidsDepositService;
 
     @PostMapping("/pay1dt")
     public ResponseEntity<?> createPayment() {
@@ -43,6 +47,31 @@ public class PaymentController {
             if (clientSecret != null) {
                 Map<String, String> response = new HashMap<>();
                 response.put("clientSecret", clientSecret);
+                return ResponseEntity.ok(response);
+            }
+
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to create payment intent"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/payCreationAuctionFees/{auctionId}/{amount}")
+    public ResponseEntity<?> createCreationFeesPayment(@PathVariable String auctionId, @PathVariable Long amount) {
+        try {
+            String clientSecret = paymentService.createPaymentIntent(amount);
+
+            if (clientSecret != null) {
+                Map<String, String> response = new HashMap<>();
+                response.put("clientSecret", clientSecret);
+                Auction auction = auctionService.findAuctionById(auctionId);
+                auction.setStatus("pending");
+                AuctionsBidsDeposit deposit = new AuctionsBidsDeposit();
+                deposit.setAuctionId(auctionId);
+                deposit.setAmount(amount.doubleValue());
+                deposit.setType(AuctionsBidsDeposit.Type.CREATION);
+                auctionsBidsDepositService.saveDeposit(deposit);
                 return ResponseEntity.ok(response);
             }
 
