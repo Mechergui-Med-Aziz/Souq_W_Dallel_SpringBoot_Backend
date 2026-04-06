@@ -9,6 +9,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.MultiValueMap;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Document(collection = "auctions")
 @Data
 @NoArgsConstructor
@@ -26,7 +28,9 @@ public class Auction {
     private String category;
 
     private String status;
-    private boolean isPaid = false;
+
+    @JsonProperty("isPaid") 
+    private boolean isPaid;
 
     private List<String> photoId;
     private Map<String, Double> bidders;

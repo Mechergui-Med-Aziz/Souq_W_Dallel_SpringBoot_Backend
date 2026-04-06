@@ -67,6 +67,7 @@ public class PaymentController {
                 response.put("clientSecret", clientSecret);
                 Auction auction = auctionService.findAuctionById(auctionId);
                 auction.setStatus("pending");
+                auctionService.updateAuction(auction);
                 AuctionsBidsDeposit deposit = new AuctionsBidsDeposit();
                 deposit.setAuctionId(auctionId);
                 deposit.setAmount(amount.doubleValue());
