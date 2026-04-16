@@ -46,6 +46,21 @@ public class UserController {
     @Autowired
     private ParcelService parcelService;
 
+
+    @GetMapping("/test-props")
+    public ResponseEntity<?> testProps() {
+        try {
+            InputStream is = getClass().getResourceAsStream("/application.properties");
+            if (is != null) {
+                return ResponseEntity.ok("application.properties FOUND in JAR");
+            } else {
+                return ResponseEntity.status(500).body("application.properties NOT FOUND in JAR");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+    
     @GetMapping("users/all")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.findAllUsers();
