@@ -33,6 +33,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
+
 @RestController
 @RequestMapping("api")
 
@@ -46,7 +47,8 @@ public class UserController {
     private PhotoService photoService;
     @Autowired
     private ParcelService parcelService;
-
+    @Autowired
+    private org.springframework.core.env.Environment environment;
 
     @GetMapping("/test-props")
     public ResponseEntity<?> testProps() {
@@ -61,7 +63,13 @@ public class UserController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
-    
+
+    @GetMapping("/test-mongo-url")
+    public ResponseEntity<?> testMongoUrl() {
+        String mongoUri = environment.getProperty("spring.data.mongodb.uri");
+        return ResponseEntity.ok("MongoDB URI: " + mongoUri);
+    }
+
     @GetMapping("users/all")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.findAllUsers();
@@ -223,7 +231,7 @@ public class UserController {
     @PutMapping("users/admin/unblock/{id}")
     public ResponseEntity<User> unblockUser(@PathVariable String id) {
         User user = userService.findUserById(id);
-        if(user != null){
+        if (user != null) {
             userService.unblockUser(id);
             emailService.sendAccountUnblockEmail(user.getEmail());
             return ResponseEntity.ok(user);
@@ -252,14 +260,14 @@ public class UserController {
     @PutMapping("users/admin/remove-transporter/{id}")
     public ResponseEntity<User> removeTransporter(@PathVariable String id) {
         List<Parcel> parcels = parcelService.findByTransporterId(id);
-        if(parcels.size() > 0){
+        if (parcels.size() > 0) {
             for (Parcel parcel : parcels) {
                 parcel.setTransporterId(null);
-                
+
             }
-            
+
         }
-        
+
         User user = userService.makeUser(id);
         return ResponseEntity.ok(user);
     }
@@ -282,7 +290,5 @@ public class UserController {
 
         return ResponseEntity.ok().build();
     }
-
-
 
 }
